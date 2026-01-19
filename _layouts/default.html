@@ -24,6 +24,13 @@
         </div>
     </header>
 
+
+    {% if page.show_hero %}
+    <div class="container">
+        {% include hero.html %}
+    </div>
+    {% endif %}
+
     <div class="container main-layout">
         <main class="content">
             {{ content }}
