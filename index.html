@@ -3,15 +3,16 @@ layout: default
 title: Home
 ---
 <section class="hero glass-card">
-    <h1>Welcome to My Blog</h1>
-    <p>Thoughts, stories, and ideas.</p>
+    <h1>Welcome!</h1>
 </section>
 
 <section class="post-list">
     <h2>Latest Posts</h2>
     <ul class="posts">
         {% for post in site.posts %}
-        <li class="post-item glass-card clickable" onclick="location.href='{{ post.url | relative_url }}'">
+        <li class="post-item glass-card clickable"
+            data-categories="{% for cat in post.categories %}{{ cat | slugify }} {% endfor %}"
+            onclick="location.href='{{ post.url | relative_url }}'">
             <div class="post-meta-header">
                 <span class="post-date">{{ post.date | date: "%b %-d, %Y" }}</span>
                 <div class="category-tags">

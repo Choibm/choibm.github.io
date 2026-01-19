@@ -61,6 +61,7 @@ body {
     text-decoration: none;
     color: white;
     background: var(--accent-gradient);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -99,6 +100,7 @@ nav a:hover {
     font-size: 2.5rem;
     margin-bottom: 0.5rem;
     background: var(--accent-gradient);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -158,6 +160,55 @@ footer {
     padding: 4rem 2rem;
     color: #666;
     font-size: 0.9rem;
+}
+
+/* Layout */
+.main-layout {
+    display: grid;
+    grid-template-columns: 1fr 250px;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .main-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Sidebar */
+.sidebar h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--accent-color);
+}
+
+.sidebar-categories {
+    list-style: none;
+}
+
+.sidebar-categories li {
+    margin-bottom: 0.5rem;
+}
+
+.category-filter {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+    display: block;
+    padding: 0.5rem;
+    border-radius: 8px;
+}
+
+.category-filter:hover {
+    color: var(--accent-color);
+    background: var(--glass-bg);
+}
+
+.category-filter.active {
+    color: white;
+    background: var(--accent-gradient);
 }
 
 /* Category Tags */

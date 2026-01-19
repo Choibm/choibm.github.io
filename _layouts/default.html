@@ -24,12 +24,74 @@
         </div>
     </header>
 
-    <main class="container">
-        {{ content }}
-    </main>
+    <div class="container main-layout">
+        <main class="content">
+            {{ content }}
+        </main>
+
+        <aside class="sidebar glass-card">
+            <h3>Categories</h3>
+            <ul class="sidebar-categories">
+                <li><a href="{{ '/' | relative_url }}#all" class="category-filter active" data-category="all">All
+                        Posts</a></li>
+                {% for category in site.categories %}
+                <li><a href="{{ '/' | relative_url }}#{{ category[0] | slugify }}" class="category-filter"
+                        data-category="{{ category[0] | slugify }}">{{ category[0] | capitalize }}</a></li>
+                {% endfor %}
+            </ul>
+        </aside>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const filters = document.querySelectorAll('.category-filter');
+            const posts = document.querySelectorAll('.post-item');
+
+            function applyFilter(category) {
+                if (posts.length === 0) return;
+
+                filters.forEach(f => {
+                    if (f.getAttribute('data-category') === category) {
+                        f.classList.add('active');
+                    } else {
+                        f.classList.remove('active');
+                    }
+                });
+
+                posts.forEach(post => {
+                    if (category === 'all') {
+                        post.style.display = 'block';
+                    } else {
+                        const postCategories = post.getAttribute('data-categories').trim().split(' ');
+                        if (postCategories.includes(category)) {
+                            post.style.display = 'block';
+                        } else {
+                            post.style.display = 'none';
+                        }
+                    }
+                });
+            }
+
+            filters.forEach(filter => {
+                filter.addEventListener('click', function (e) {
+                    if (posts.length > 0) {
+                        e.preventDefault();
+                        const category = this.getAttribute('data-category');
+                        applyFilter(category);
+                        window.history.pushState(null, null, '#' + category);
+                    }
+                });
+            });
+
+            if (window.location.hash) {
+                const hash = window.location.hash.substring(1);
+                applyFilter(hash);
+            }
+        });
+    </script>
 
     <footer class="container">
-        <p>&copy; {{ site.time | date: '%Y' }} {{ site.title }}. Built with Jekyll.</p>
+        <p>&copy; {{ site.time | date: '%Y' }} {{ site.title }}.</p>
     </footer>
 </body>
 
