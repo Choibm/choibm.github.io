@@ -1,0 +1,19 @@
+title: Choibm's Blog
+description: A modern, clickable personal blog built with Jekyll and GitHub Pages.
+baseurl: ""
+url: "https://choibm.github.io"
+
+# Build settings
+remote_theme: jekyll/minima # Fallback if needed, but we'll use custom layouts
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
