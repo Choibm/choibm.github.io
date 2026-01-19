@@ -1,0 +1,22 @@
+---
+layout: default
+title: Categories
+---
+
+<section class="categories-page glass-card">
+    <h1>Post Categories</h1>
+
+    {% for category in site.categories %}
+    <div class="category-section" id="{{ category[0] | slugify }}">
+        <h2 class="category-title">{{ category[0] | capitalize }}</h2>
+        <ul class="posts">
+            {% for post in category[1] %}
+            <li class="post-item glass-card clickable" onclick="location.href='{{ post.url | relative_url }}'">
+                <span class="post-date">{{ post.date | date: "%b %-d, %Y" }}</span>
+                <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</section>

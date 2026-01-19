@@ -12,7 +12,14 @@ title: Home
     <ul class="posts">
         {% for post in site.posts %}
         <li class="post-item glass-card clickable" onclick="location.href='{{ post.url | relative_url }}'">
-            <span class="post-date">{{ post.date | date: "%b %-d, %Y" }}</span>
+            <div class="post-meta-header">
+                <span class="post-date">{{ post.date | date: "%b %-d, %Y" }}</span>
+                <div class="category-tags">
+                    {% for cat in post.categories %}
+                    <span class="category-tag">{{ cat }}</span>
+                    {% endfor %}
+                </div>
+            </div>
             <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
             <p class="post-excerpt">{{ post.excerpt | strip_html | truncatewords: 25 }}</p>
         </li>

@@ -159,3 +159,48 @@ footer {
     color: #666;
     font-size: 0.9rem;
 }
+
+/* Category Tags */
+.post-meta-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.category-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.category-tag {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: var(--accent-color);
+}
+
+.category-section {
+    margin-bottom: 3rem;
+}
+
+.category-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: white;
+    border-left: 4px solid var(--accent-color);
+    padding-left: 1rem;
+}
+
+/* Ensure images stay inside the blog container */
+img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    /* This makes the corners look nice and rounded */
+    display: block;
+    margin: 1rem 0;
+}
