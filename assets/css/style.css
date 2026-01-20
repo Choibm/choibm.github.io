@@ -318,3 +318,14 @@ img {
         height: 400px;
     }
 }
+
+/* Blockquote Styling */
+blockquote {
+    border-left: 4px solid var(--accent-color);
+    background: var(--glass-bg);
+    margin: 1.5rem 0;
+    padding: 1rem 1.5rem;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: #bdbdbd;
+}
