@@ -1,0 +1,170 @@
+<div id="pn-junction-container"
+    style="width: 100%; max-width: 800px; margin: auto; font-family: sans-serif; background: #1a1a1a; color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+    <h2 style="text-align: center; color: #61dafb;">Interactive PN Junction Simulator</h2>
+
+    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
+        <button onclick="setBias('reverse')"
+            style="background: #ff4d4d; border: none; padding: 10px 15px; border-radius: 5px; color: white; cursor: pointer; font-weight: bold;">Reverse
+            Bias</button>
+        <button onclick="setBias('none')"
+            style="background: #888; border: none; padding: 10px 15px; border-radius: 5px; color: white; cursor: pointer; font-weight: bold;">Equilibrium
+            (None)</button>
+        <button onclick="setBias('forward')"
+            style="background: #4caf50; border: none; padding: 10px 15px; border-radius: 5px; color: white; cursor: pointer; font-weight: bold;">Forward
+            Bias</button>
+    </div>
+
+    <canvas id="junctionCanvas" width="700" height="300"
+        style="width: 100%; border: 1px solid #444; background: #000; border-radius: 8px;"></canvas>
+
+    <div style="margin-top: 15px; font-size: 0.9em; line-height: 1.6; color: #ccc;">
+        <p id="status-text"><strong>Current State:</strong> Equilibrium. Drift and Diffusion are balanced.</p>
+        <div style="display: flex; justify-content: space-around; border-top: 1px solid #444; padding-top: 10px;">
+            <span><span style="color: #4db8ff;">●</span> Electron (N-type)</span>
+            <span><span style="color: #ff4d4d;">○</span> Hole (P-type)</span>
+            <span style="background: rgba(255,255,255,0.1); padding: 2px 5px;">Depletion Region</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('junctionCanvas');
+    const ctx = canvas.getContext('2d');
+    const statusText = document.getElementById('status-text');
+
+    let bias = 'none'; // 'none', 'forward', 'reverse'
+    let depletionWidth = 100;
+    let particles = [];
+
+    class Particle {
+        constructor(type, side) {
+            this.type = type; // 'electron' or 'hole'
+            this.side = side; // 'p' or 'n'
+            this.reset();
+        }
+
+        reset() {
+            this.y = Math.random() * canvas.height;
+            if (this.side === 'p') {
+                this.x = Math.random() * (canvas.width / 2 - depletionWidth / 2);
+                this.color = '#ff4d4d'; // Red for Holes
+            } else {
+                this.x = canvas.width / 2 + depletionWidth / 2 + Math.random() * (canvas.width / 2 - depletionWidth / 2);
+                this.color = '#4db8ff'; // Blue for Electrons
+            }
+            this.speedX = (Math.random() - 0.5) * 1.5;
+            this.speedY = (Math.random() - 0.5) * 1.5;
+        }
+
+        update() {
+            // Basic Thermal Motion (Diffusion attempt)
+            this.x += this.speedX;
+            this.y += this.speedY;
+
+            const leftEdge = 0;
+            const rightEdge = canvas.width;
+            const pBoundary = canvas.width / 2 - depletionWidth / 2;
+            const nBoundary = canvas.width / 2 + depletionWidth / 2;
+
+            // Logic for Forward Bias (Diffusion overcomes barrier)
+            if (bias === 'forward') {
+                if (this.type === 'electron') this.x -= 1.5; // Electrons drift toward P
+                if (this.type === 'hole') this.x += 1.5;     // Holes drift toward N
+
+                // Re-spawn to simulate continuous current
+                if (this.x < 0 || this.x > canvas.width) this.reset();
+            }
+            // Logic for Reverse Bias (Pulled away)
+            else if (bias === 'reverse') {
+                if (this.type === 'electron') this.x += 1.0;
+                if (this.type === 'hole') this.x -= 1.0;
+
+                // Boundary checks
+                if (this.x < 10) this.x = 10;
+                if (this.x > canvas.width - 10) this.x = canvas.width - 10;
+            }
+            // Logic for Equilibrium
+            else {
+                if (this.side === 'p' && this.x > pBoundary) this.speedX *= -1;
+                if (this.side === 'n' && this.x < nBoundary) this.speedX *= -1;
+            }
+
+            // Wall collisions
+            if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+            if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            if (this.type === 'hole') {
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            } else {
+                ctx.fill();
+            }
+        }
+    }
+
+    // Initialize particles
+    function init() {
+        particles = [];
+        for (let i = 0; i < 40; i++) particles.push(new Particle('hole', 'p'));
+        for (let i = 0; i < 40; i++) particles.push(new Particle('electron', 'n'));
+    }
+
+    function setBias(mode) {
+        bias = mode;
+        if (mode === 'forward') {
+            depletionWidth = 30;
+            statusText.innerHTML = "<strong>Current State:</strong> Forward Bias. The depletion region shrinks, allowing <strong>Diffusion Current</strong> to dominate.";
+        } else if (mode === 'reverse') {
+            depletionWidth = 200;
+            statusText.innerHTML = "<strong>Current State:</strong> Reverse Bias. The depletion region widens. <strong>Drift</strong> pulls carriers away from the junction.";
+        } else {
+            depletionWidth = 100;
+            statusText.innerHTML = "<strong>Current State:</strong> Equilibrium. The built-in potential stops diffusion. Net current is zero.";
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw P and N backgrounds
+        ctx.fillStyle = '#2a1010'; // P-side dark red
+        ctx.fillRect(0, 0, canvas.width / 2, canvas.height);
+        ctx.fillStyle = '#101a2a'; // N-side dark blue
+        ctx.fillRect(canvas.width / 2, 0, canvas.width / 2, canvas.height);
+
+        // Draw Depletion Region
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.fillRect(canvas.width / 2 - depletionWidth / 2, 0, depletionWidth, canvas.height);
+
+        // Draw Center Line
+        ctx.strokeStyle = '#fff';
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, 0);
+        ctx.lineTo(canvas.width / 2, canvas.height);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Labels
+        ctx.fillStyle = "white";
+        ctx.font = "bold 20px Arial";
+        ctx.fillText("P-TYPE", 50, 40);
+        ctx.fillText("N-TYPE", canvas.width - 130, 40);
+
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+
+        requestAnimationFrame(animate);
+    }
+
+    init();
+    animate();
+</script>
