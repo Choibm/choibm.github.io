@@ -204,9 +204,6 @@
                 this.x += this.vx;
                 this.y += this.vy;
 
-                const pBoundary = 400 - depletionWidth / 2;
-                const nBoundary = 400 + depletionWidth / 2;
-
                 // Recombination Logic (Physical)
                 let isMinority = (this.type === 'electron' && this.x < 400) || (this.type === 'hole' && this.x > 400);
 
@@ -221,30 +218,43 @@
                     if (this.opacity < 1.0) this.opacity = 1.0;
                 }
 
-                // Movement
+                // --- MOVEMENT LOGIC ---
                 if (currentBias === 'forward') {
                     if (this.type === 'hole') this.x += 1.5;
                     if (this.type === 'electron') this.x -= 1.5;
                     if (this.x > 800 || this.x < 0) this.initPosition();
                 }
                 else if (currentBias === 'reverse') {
-                    // --- NEW DRIFT LOGIC FOR SATURATION CURRENT ---
+                    // --- CORRECTED "SWEEPING" PHYSICS ---
+                    const depletionLeft = 400 - depletionWidth / 2;
+                    const depletionRight = 400 + depletionWidth / 2;
+
                     if (this.type === 'hole') {
-                        // If it is a MINORITY hole (on N side, x > 400), it gets SWEPT left fast
-                        if (this.x > 400) this.x -= 15;
-                        else this.x -= 0.5; // Majority holes pull away slowly
+                        // Hole moves LEFT (N -> P)
+                        // If hole is inside the Field OR on the N-side (Minority), it SWEEPS
+                        if (this.x > depletionLeft) {
+                            this.x -= 15; // Fast Sweep
+                        } else {
+                            this.x -= 1; // Slow Extraction
+                        }
 
                         if (this.x < 10 && !this.isThermallyGenerated) this.vx *= -1;
                     }
                     else { // Electron
-                        // If it is a MINORITY electron (on P side, x < 400), it gets SWEPT right fast
-                        if (this.x < 400) this.x += 15;
-                        else this.x += 0.5; // Majority electrons pull away slowly
+                        // Electron moves RIGHT (P -> N)
+                        // If electron is inside the Field OR on the P-side (Minority), it SWEEPS
+                        if (this.x < depletionRight) {
+                            this.x += 15; // Fast Sweep
+                        } else {
+                            this.x += 1; // Slow Extraction
+                        }
 
                         if (this.x > 790 && !this.isThermallyGenerated) this.vx *= -1;
                     }
                 }
                 else { // Equilibrium
+                    const pBoundary = 400 - depletionWidth / 2;
+                    const nBoundary = 400 + depletionWidth / 2;
                     if (this.homeSide === 'p' && this.x > pBoundary) this.vx *= -1;
                     if (this.homeSide === 'n' && this.x < nBoundary) this.vx *= -1;
                 }
@@ -334,7 +344,6 @@
                     if (this.recombining) {
                         if (this.type === 'electron') this.y += 1.5;
                         else this.y -= 1.5;
-
                         this.opacity -= 0.04;
                         if (this.opacity <= 0) {
                             this.reset();
@@ -375,7 +384,7 @@
             if (Math.random() < 0.05) {
                 // Generate Minority Electron in P-side
                 let pElectron = new Carrier('electron', 'p');
-                pElectron.x = 400 - depletionWidth / 2 - 10;
+                pElectron.x = 400 - depletionWidth / 2 - 10; // Start just left of depletion
                 pElectron.y = 40 + Math.random() * 160;
                 pElectron.isThermallyGenerated = true;
                 particles.push(pElectron);
@@ -384,7 +393,7 @@
             if (Math.random() < 0.05) {
                 // Generate Minority Hole in N-side
                 let nHole = new Carrier('hole', 'n');
-                nHole.x = 400 + depletionWidth / 2 + 10;
+                nHole.x = 400 + depletionWidth / 2 + 10; // Start just right of depletion
                 nHole.y = 40 + Math.random() * 160;
                 nHole.isThermallyGenerated = true;
                 particles.push(nHole);
