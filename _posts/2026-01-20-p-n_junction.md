@@ -18,8 +18,10 @@ The cause is concentration gradient (dC/dx) between P-side and N-side. This move
 ## 2. Drift : The movement caused by electric field.
 #### caused by the built-in electric field created by the exposed ions (Depletion Region) and this movement opposes diffusion and keeps the P and N regions separated.
 > J<small>drift</small> =qnμE
+{: .text-center}
 
-> J<small>total</small> = J<small>drift</small> + J<small>diffusion</small> = 0 
+> J<small>total</small> = J<small>drift</small> + J<small>diffusion</small> = 0
+{: .text-center} 
 
 When no voltage is applied the total current is zero. In forward bias the diffusion is greater and in reverse bias the drift is greater. 
 

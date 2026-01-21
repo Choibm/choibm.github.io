@@ -329,3 +329,7 @@ blockquote {
     font-style: italic;
     color: #bdbdbd;
 }
+
+.text-center {
+    text-align: center;
+}
