@@ -2,7 +2,7 @@
 layout: post
 title: "P-N junction"
 date: 2026-01-20
-excerpt: "Beginning of my Studying blog"
+excerpt: 
 categories: Semiconductors MSE
 ---
 
@@ -10,7 +10,7 @@ P-N junction is the basic component of semiconductor devices.
 I'm not going to explain about what is P-type, N-type semiconductor is... to summarize P-type has more holes and N-type has more electrons.
 
 # **1. "Diffusion" and "Drift"**
-
+---
 ## 1. Diffusion : The flow caused by variation in the concentration.
 
 #### The movement of particles from an area of higher concentration to an area of lower concentration.
@@ -29,7 +29,7 @@ The cause is concentration gradient (dC/dx) between P-side and N-side. This move
 When no voltage is applied the total current is zero. In forward bias the diffusion is greater and in reverse bias the drift is greater. 
 
 # **2. Biased P-N junction**
-
+---
 {% include pn-junction-sim.html %}
 
 ## Forward Bias
@@ -76,6 +76,3 @@ these steps are how the forward bias makes current flow.
 #### 3. The depletion region's electric field sweeps the minority carriers across the junction.
 
 #### the mechanism of the constant current flow is because the current only depends on the EHP generation rate. (So, ncreasing the reverse voltage doesn't increase the current)
-
-
-![Welcome!](<{{ '/assets/images/2026-01-19_img1.png' | relative_url }}>)
