@@ -1,7 +1,45 @@
-<div class="hero-container">
-    <canvas id="heroCanvas"></canvas>
-    <div class="hero-text">
-        <h1>Welcome!</h1>
+<section class="hero-container" aria-label="Site introduction">
+    <canvas id="heroCanvas" aria-hidden="true"></canvas>
+    <div class="hero-noise" aria-hidden="true"></div>
+
+    <div class="hero-shell">
+        <div class="hero-copy">
+            <p class="hero-kicker">Quantum Information + Semiconductor + Materials</p>
+            <h1>Engineering Quantum Matter Into Information</h1>
+            <p class="hero-lead">
+                Deep dives on qubits, device physics, and functional materials that shape the next era of computation.
+            </p>
+
+            <div class="hero-actions">
+                <a class="hero-btn hero-btn-primary" href="{{ '/' | relative_url }}#all">Read Latest Posts</a>
+                <a class="hero-btn hero-btn-ghost" href="{{ '/categories' | relative_url }}">Explore Categories</a>
+            </div>
+
+            <ul class="hero-metrics">
+                <li>
+                    <span class="metric-label">Core Domain</span>
+                    <span class="metric-value">Quantum Information</span>
+                </li>
+                <li>
+                    <span class="metric-label">Applied Focus</span>
+                    <span class="metric-value">Semiconductor Devices</span>
+                </li>
+                <li>
+                    <span class="metric-label">Research Lens</span>
+                    <span class="metric-value">Advanced Materials</span>
+                </li>
+            </ul>
+        </div>
+
+        <aside class="hero-panel" aria-label="Research themes">
+            <p class="hero-panel-title">Research Vectors</p>
+            <ul class="hero-panel-list">
+                <li>Noise-aware quantum architectures</li>
+                <li>Band structure to device performance</li>
+                <li>Defect engineering in functional solids</li>
+            </ul>
+            <p class="hero-panel-equation">State + Structure + Process = Information Hardware</p>
+        </aside>
     </div>
-</div>
+</section>
 <script src="{{ '/assets/js/hero.js' | relative_url }}"></script>
