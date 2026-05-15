@@ -4,71 +4,200 @@ title: Home
 ---
 
 <pre class="hero-ascii" id="hero-ascii" aria-hidden="true">
-              hv (photon)
-      _/\_/\_/\_/\_/\_/\_/\_/\_/\_
-                  |
-                  v
-  +-------------------------------+
-  | Si Si Si Si Si Si Si Si Si Si |
-  | Si Si Si Si Si Si Si Si Si Si |
-  | Si Si Si Si Si Si Si Si Si Si |
-  +-------------------------------+
-                  |
-                  v
-      o-&gt; o-&gt; o-&gt; o-&gt; o-&gt; o-&gt; o-&gt;
-      ---- photocurrent ----&gt;
+~ D I A M O N D ~                  ~ B L O C H   S P H E R E ~
+
+                                                |0&#10217;
+                                              .........
+                                          ..::         ::..
+              *                        .::                 ::.
+             /:\                      :                       :
+            /:::\                    :                         :
+           /:::::\                  :                           :
+          /:::::::\                :                             :
+         /:::::::::\              :                               :
+        /:::::::::::\             |                               |
+       /:::::::::::::\           :          + . . . . . . . . . . :  |+&#10217;
+      /:::::::::::::::\           |                               |
+     +:::::::::::::::::+         :                               :
+      \:::::::::::::::/           :                             :
+       \:::::::::::::/             :                           :
+        \:::::::::::/               :                         :
+         \:::::::::/                 :.                     .:
+          \:::::::/                    '::                 ::'
+           \:::::/                       '::..         ..::'
+            \:::/                            '''.....'''
+             \:/                                |1&#10217;
+              *
+                                  |&#968;&#10217; = &#945;|0&#10217; + &#946;|1&#10217;
 </pre>
-<p class="hero-ascii-caption">Fig. &mdash; photogeneration of carriers in silicon.</p>
+<p class="hero-ascii-caption">Fig. &mdash; qubit state on the Bloch sphere; NV center in diamond.</p>
 
 <script>
 (function () {
     var el = document.getElementById('hero-ascii');
     if (!el) return;
 
-    var WIDTH = 28;
-    var WAVE_PAT = "_/\\";   // length 3
-    var ELEC_PAT = "o-> ";   // length 4
+    var ROWS = 24, COLS = 80;
+    var DIAMOND_LINES = [
+        "      *      ",
+        "     /:\\     ",
+        "    /:::\\    ",
+        "   /:::::\\   ",
+        "  /:::::::\\  ",
+        " /:::::::::\\ ",
+        "/:::::::::::\\",
+        "+:::::::::::+",
+        "\\:::::::::::/",
+        " \\:::::::::/ ",
+        "  \\:::::::/  ",
+        "   \\:::::/   ",
+        "    \\:::/    ",
+        "     \\:/     ",
+        "      *      "
+    ];
+    var DIAMOND_BIG = [
+        "         *         ",
+        "        /:\\        ",
+        "       /:::\\       ",
+        "      /:::::\\      ",
+        "     /:::::::\\     ",
+        "    /:::::::::\\    ",
+        "   /:::::::::::\\   ",
+        "  /:::::::::::::\\  ",
+        " /:::::::::::::::\\ ",
+        "+:::::::::::::::::+",
+        " \\:::::::::::::::/ ",
+        "  \\:::::::::::::/  ",
+        "   \\:::::::::::/   ",
+        "    \\:::::::::/    ",
+        "     \\:::::::/     ",
+        "      \\:::::/      ",
+        "       \\:::/       ",
+        "        \\:/        ",
+        "         *         "
+    ];
 
-    function shifted(pat, len, offset) {
-        var L = pat.length;
-        var out = "";
-        for (var i = 0; i < len; i++) {
-            out += pat.charAt(((i - offset) % L + L) % L);
+    function blank() {
+        var g = [];
+        for (var r = 0; r < ROWS; r++) {
+            var row = new Array(COLS);
+            for (var c = 0; c < COLS; c++) row[c] = ' ';
+            g.push(row);
         }
-        return out;
+        return g;
+    }
+    function setAt(g, r, c, ch) {
+        if (r >= 0 && r < ROWS && c >= 0 && c < COLS) g[r][c] = ch;
+    }
+    function setIfBlank(g, r, c, ch) {
+        if (r >= 0 && r < ROWS && c >= 0 && c < COLS && g[r][c] === ' ') g[r][c] = ch;
+    }
+    function drawString(g, r, c, str) {
+        var chars = Array.from(str);
+        for (var i = 0; i < chars.length; i++) setAt(g, r, c + i, chars[i]);
+    }
+    function render(g) {
+        return g.map(function (row) { return row.join(''); }).join('\n');
+    }
+
+    var DTOP = 2, DLEFT = 3;
+    var DC_ROW = DTOP + 9, DC_COL = DLEFT + 9;
+
+    function drawDiamond(g, t) {
+        for (var i = 0; i < DIAMOND_BIG.length; i++) {
+            drawString(g, DTOP + i, DLEFT, DIAMOND_BIG[i]);
+        }
+        // 8 fixed sparkle positions around the gem; cycle which 2 are lit.
+        var positions = [
+            [DC_ROW - 10, DC_COL],         // N
+            [DC_ROW - 8,  DC_COL + 12],    // NE
+            [DC_ROW,      DC_COL + 14],    // E
+            [DC_ROW + 8,  DC_COL + 12],    // SE
+            [DC_ROW + 10, DC_COL],         // S
+            [DC_ROW + 8,  DC_COL - 12],    // SW
+            [DC_ROW,      DC_COL - 14],    // W
+            [DC_ROW - 8,  DC_COL - 12]     // NW
+        ];
+        var lit = [t % 8, (t + 3) % 8];
+        for (var s = 0; s < lit.length; s++) {
+            var p = positions[lit[s]];
+            setIfBlank(g, p[0], p[1], s === 0 ? '*' : '.');
+        }
+        // small label below diamond
+        drawString(g, DTOP + DIAMOND_BIG.length + 1, DLEFT + 3, 'C-C-C-C-C-C');
+        drawString(g, DTOP + DIAMOND_BIG.length + 2, DLEFT + 3, 'tetrahedral');
+    }
+
+    var SR = 11, SC = 56, SRX = 16, SRY = 8;
+
+    function drawSphere(g) {
+        // outline
+        for (var theta = 0; theta < Math.PI * 2; theta += 0.025) {
+            var r = Math.round(SR - SRY * Math.sin(theta));
+            var c = Math.round(SC + SRX * Math.cos(theta));
+            setIfBlank(g, r, c, '.');
+        }
+        // visible equator (front, sin >= 0 in screen space, so we draw below center)
+        for (var phi = 0; phi <= Math.PI; phi += 0.035) {
+            var rE = Math.round(SR + 2 * Math.sin(phi));
+            var cE = Math.round(SC + SRX * Math.cos(phi));
+            setIfBlank(g, rE, cE, '.');
+        }
+        // back equator dashed
+        for (var phi2 = Math.PI; phi2 < Math.PI * 2; phi2 += 0.18) {
+            var rE2 = Math.round(SR + 2 * Math.sin(phi2));
+            var cE2 = Math.round(SC + SRX * Math.cos(phi2));
+            setIfBlank(g, rE2, cE2, '.');
+        }
+        // a meridian (Y-Z great circle, visible front half)
+        for (var psi = 0; psi <= Math.PI; psi += 0.04) {
+            var rM = Math.round(SR - SRY * Math.cos(psi));
+            var cM = Math.round(SC + (SRX * 0.18) * Math.sin(psi));
+            setIfBlank(g, rM, cM, ':');
+        }
+        // center
+        setAt(g, SR, SC, '+');
+        // labels
+        drawString(g, SR - SRY - 1, SC - 1, '|0⟩');
+        drawString(g, SR + SRY + 1, SC - 1, '|1⟩');
+        drawString(g, SR, SC + SRX + 2, '|+⟩');
+        drawString(g, SR, SC - SRX - 4, '|-⟩');
+    }
+
+    function drawVector(g, angle) {
+        // draw from center toward (SR - SRY*sin, SC + SRX*cos)
+        var dr = -SRY * Math.sin(angle);
+        var dc = SRX * Math.cos(angle);
+        var steps = Math.round(Math.max(Math.abs(dr), Math.abs(dc)));
+        if (steps === 0) return;
+        for (var i = 1; i <= steps; i++) {
+            var rr = Math.round(SR + dr * i / steps);
+            var cc = Math.round(SC + dc * i / steps);
+            if (i === steps) {
+                setAt(g, rr, cc, '●'); // ●
+            } else {
+                setAt(g, rr, cc, '*');
+            }
+        }
     }
 
     function frame(t) {
-        var wave = shifted(WAVE_PAT, WIDTH, t);
-        var elec = shifted(ELEC_PAT, WIDTH, t);
-        return [
-            "              hv (photon)",
-            "      " + wave,
-            "                  |",
-            "                  v",
-            "  +-------------------------------+",
-            "  | Si Si Si Si Si Si Si Si Si Si |",
-            "  | Si Si Si Si Si Si Si Si Si Si |",
-            "  | Si Si Si Si Si Si Si Si Si Si |",
-            "  +-------------------------------+",
-            "                  |",
-            "                  v",
-            "      " + elec,
-            "      ---- photocurrent ---->"
-        ].join("\n");
+        var g = blank();
+        drawString(g, 0, 5, '~ D I A M O N D ~');
+        drawString(g, 0, 45, '~ B L O C H   S P H E R E ~');
+        drawDiamond(g, t);
+        drawSphere(g);
+        // state vector starts pointing up (|0>), rotates clockwise
+        var angle = Math.PI / 2 - (t * Math.PI / 12);
+        drawVector(g, angle);
+        drawString(g, ROWS - 1, 41, '|ψ⟩ = α|0⟩ + β|1⟩');
+        return render(g);
     }
 
     el.textContent = frame(0);
-
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        return;
-    }
-
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var t = 0;
-    setInterval(function () {
-        t = (t + 1) % 12;
-        el.textContent = frame(t);
-    }, 200);
+    setInterval(function () { t = (t + 1) % 24; el.textContent = frame(t); }, 180);
 })();
 </script>
 
