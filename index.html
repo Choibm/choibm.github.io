@@ -1,35 +1,31 @@
 ---
 layout: default
 title: Home
-show_hero: true
 ---
 
-<section class="post-list">
-    <div class="section-header">
-        <h2>Latest posts</h2>
-        <span class="section-eyebrow">{{ site.posts | size }} entries</span>
-    </div>
-    <ul class="posts">
-        {% for post in site.posts %}
-        {% assign post_number = forloop.length | minus: forloop.index0 %}
-        <li class="post-item glass-card clickable"
-            data-categories="{% for cat in post.categories %}{{ cat | slugify }} {% endfor %}"
-            onclick="location.href='{{ post.url | relative_url }}'">
-            <span class="post-index">{{ post_number | prepend: '000' | slice: -3, 3 }}</span>
-            <div class="post-meta-header">
-                <span class="post-date">{{ post.date | date: "%b %-d, %Y" }}</span>
-                <div class="category-tags">
-                    {% for cat in post.categories %}
-                    <span class="category-tag">{{ cat }}</span>
-                    {% endfor %}
-                </div>
-            </div>
-            <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
-            {% if post.excerpt and post.excerpt != '' %}
-            <p class="post-excerpt">{{ post.excerpt | strip_html | truncatewords: 28 }}</p>
-            {% endif %}
-            <span class="post-readmore">Read article <span aria-hidden="true">→</span></span>
-        </li>
-        {% endfor %}
-    </ul>
-</section>
+<p>Welcome. This is a small personal homepage where I keep notes and the occasional write-up.</p>
+
+<h2>Posts</h2>
+
+<ul class="post-list">
+    {% for post in site.posts %}
+    <li>
+        <span class="post-date">{{ post.date | date: "%Y-%m-%d" }}</span> &ndash;
+        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+        {% if post.categories.size > 0 %}
+        <span class="post-cats">[{% for cat in post.categories %}{{ cat }}{% unless forloop.last %}, {% endunless %}{% endfor %}]</span>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+
+<h2>Categories</h2>
+
+<ul>
+    {% for category in site.categories %}
+    <li>
+        <a href="{{ '/categories' | relative_url }}#{{ category[0] | slugify }}">{{ category[0] }}</a>
+        ({{ category[1] | size }})
+    </li>
+    {% endfor %}
+</ul>
