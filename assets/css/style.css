@@ -247,18 +247,20 @@ table th, table td {
 .hero-ascii {
     font-family: "Courier New", Courier, monospace;
     font-size: 13px;
-    line-height: 1.15;
+    line-height: 1.1;
     color: #000;
     background: #fff;
     border-top: 1px solid #000;
     border-bottom: 1px solid #000;
-    padding: 0.9em 0.5em;
+    padding: 0.8em 0.4em;
     margin: 0.4em 0 0.3em;
     white-space: pre;
     overflow-x: auto;
     text-align: center;
     letter-spacing: 0;
 }
+
+.hero-ascii .noise { color: #aaa; }
 
 .hero-ascii-caption {
     text-align: center;

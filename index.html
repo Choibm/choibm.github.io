@@ -3,79 +3,38 @@ layout: default
 title: Home
 ---
 
-<pre class="hero-ascii" id="hero-ascii" aria-hidden="true">
-~ D I A M O N D ~                  ~ B L O C H   S P H E R E ~
-
-                                                |0&#10217;
-                                              .........
-                                          ..::         ::..
-              *                        .::                 ::.
-             /:\                      :                       :
-            /:::\                    :                         :
-           /:::::\                  :                           :
-          /:::::::\                :                             :
-         /:::::::::\              :                               :
-        /:::::::::::\             |                               |
-       /:::::::::::::\           :          + . . . . . . . . . . :  |+&#10217;
-      /:::::::::::::::\           |                               |
-     +:::::::::::::::::+         :                               :
-      \:::::::::::::::/           :                             :
-       \:::::::::::::/             :                           :
-        \:::::::::::/               :                         :
-         \:::::::::/                 :.                     .:
-          \:::::::/                    '::                 ::'
-           \:::::/                       '::..         ..::'
-            \:::/                            '''.....'''
-             \:/                                |1&#10217;
-              *
-                                  |&#968;&#10217; = &#945;|0&#10217; + &#946;|1&#10217;
-</pre>
-<p class="hero-ascii-caption">Fig. &mdash; qubit state on the Bloch sphere; NV center in diamond.</p>
+<pre class="hero-ascii" id="hero-ascii" aria-hidden="true">loading...</pre>
+<p class="hero-ascii-caption">Fig. &mdash; carbon lattice and a qubit on the Bloch sphere.</p>
 
 <script>
 (function () {
     var el = document.getElementById('hero-ascii');
     if (!el) return;
 
-    var ROWS = 24, COLS = 80;
-    var DIAMOND_LINES = [
-        "      *      ",
-        "     /:\\     ",
-        "    /:::\\    ",
-        "   /:::::\\   ",
-        "  /:::::::\\  ",
-        " /:::::::::\\ ",
-        "/:::::::::::\\",
-        "+:::::::::::+",
-        "\\:::::::::::/",
-        " \\:::::::::/ ",
-        "  \\:::::::/  ",
-        "   \\:::::/   ",
-        "    \\:::/    ",
-        "     \\:/     ",
-        "      *      "
+    var ROWS = 22, COLS = 76;
+
+    // Diamond cubic lattice (atoms + sp3 bonds, projected).
+    var LATTICE = [
+        "C---C---C---C",
+        "|\\ /|\\ /|\\ /|",
+        "| C | C | C |",
+        "|/ \\|/ \\|/ \\|",
+        "C---C---C---C",
+        "|\\ /|\\ /|\\ /|",
+        "| C | C | C |",
+        "|/ \\|/ \\|/ \\|",
+        "C---C---C---C",
+        "|\\ /|\\ /|\\ /|",
+        "| C | C | C |",
+        "|/ \\|/ \\|/ \\|",
+        "C---C---C---C"
     ];
-    var DIAMOND_BIG = [
-        "         *         ",
-        "        /:\\        ",
-        "       /:::\\       ",
-        "      /:::::\\      ",
-        "     /:::::::\\     ",
-        "    /:::::::::\\    ",
-        "   /:::::::::::\\   ",
-        "  /:::::::::::::\\  ",
-        " /:::::::::::::::\\ ",
-        "+:::::::::::::::::+",
-        " \\:::::::::::::::/ ",
-        "  \\:::::::::::::/  ",
-        "   \\:::::::::::/   ",
-        "    \\:::::::::/    ",
-        "     \\:::::::/     ",
-        "      \\:::::/      ",
-        "       \\:::/       ",
-        "        \\:/        ",
-        "         *         "
-    ];
+    var DTOP = 3, DLEFT = 4;
+    var DW = LATTICE[0].length;   // 13
+    var DH = LATTICE.length;      // 13
+
+    // Bloch sphere position/size.
+    var SR = 11, SC = 54, SRX = 14, SRY = 7;
 
     function blank() {
         var g = [];
@@ -100,60 +59,42 @@ title: Home
         return g.map(function (row) { return row.join(''); }).join('\n');
     }
 
-    var DTOP = 2, DLEFT = 3;
-    var DC_ROW = DTOP + 9, DC_COL = DLEFT + 9;
-
-    function drawDiamond(g, t) {
-        for (var i = 0; i < DIAMOND_BIG.length; i++) {
-            drawString(g, DTOP + i, DLEFT, DIAMOND_BIG[i]);
+    function drawDiamond(g) {
+        for (var i = 0; i < DH; i++) {
+            drawString(g, DTOP + i, DLEFT, LATTICE[i]);
         }
-        // 8 fixed sparkle positions around the gem; cycle which 2 are lit.
-        var positions = [
-            [DC_ROW - 10, DC_COL],         // N
-            [DC_ROW - 8,  DC_COL + 12],    // NE
-            [DC_ROW,      DC_COL + 14],    // E
-            [DC_ROW + 8,  DC_COL + 12],    // SE
-            [DC_ROW + 10, DC_COL],         // S
-            [DC_ROW + 8,  DC_COL - 12],    // SW
-            [DC_ROW,      DC_COL - 14],    // W
-            [DC_ROW - 8,  DC_COL - 12]     // NW
-        ];
-        var lit = [t % 8, (t + 3) % 8];
-        for (var s = 0; s < lit.length; s++) {
-            var p = positions[lit[s]];
-            setIfBlank(g, p[0], p[1], s === 0 ? '*' : '.');
-        }
-        // small label below diamond
-        drawString(g, DTOP + DIAMOND_BIG.length + 1, DLEFT + 3, 'C-C-C-C-C-C');
-        drawString(g, DTOP + DIAMOND_BIG.length + 2, DLEFT + 3, 'tetrahedral');
+        drawString(g, DTOP + DH + 1, DLEFT, 'diamond cubic');
+        drawString(g, DTOP + DH + 2, DLEFT + 1, '(sp3 bonds)');
     }
-
-    var SR = 11, SC = 56, SRX = 16, SRY = 8;
 
     function drawSphere(g) {
         // outline
         for (var theta = 0; theta < Math.PI * 2; theta += 0.025) {
             var r = Math.round(SR - SRY * Math.sin(theta));
             var c = Math.round(SC + SRX * Math.cos(theta));
-            setIfBlank(g, r, c, '.');
+            setAt(g, r, c, '.');
         }
-        // visible equator (front, sin >= 0 in screen space, so we draw below center)
-        for (var phi = 0; phi <= Math.PI; phi += 0.035) {
+        // equator visible (front)
+        for (var phi = 0; phi <= Math.PI; phi += 0.04) {
             var rE = Math.round(SR + 2 * Math.sin(phi));
             var cE = Math.round(SC + SRX * Math.cos(phi));
-            setIfBlank(g, rE, cE, '.');
+            setAt(g, rE, cE, '.');
         }
-        // back equator dashed
-        for (var phi2 = Math.PI; phi2 < Math.PI * 2; phi2 += 0.18) {
+        // equator hidden (back) — dashed
+        for (var phi2 = Math.PI; phi2 < Math.PI * 2; phi2 += 0.22) {
             var rE2 = Math.round(SR + 2 * Math.sin(phi2));
             var cE2 = Math.round(SC + SRX * Math.cos(phi2));
-            setIfBlank(g, rE2, cE2, '.');
+            setAt(g, rE2, cE2, '.');
         }
-        // a meridian (Y-Z great circle, visible front half)
-        for (var psi = 0; psi <= Math.PI; psi += 0.04) {
+        // a meridian (front half)
+        for (var psi = 0.08; psi <= Math.PI - 0.08; psi += 0.05) {
             var rM = Math.round(SR - SRY * Math.cos(psi));
             var cM = Math.round(SC + (SRX * 0.18) * Math.sin(psi));
             setIfBlank(g, rM, cM, ':');
+        }
+        // vertical axis
+        for (var ra = SR - SRY + 1; ra <= SR + SRY - 1; ra++) {
+            setIfBlank(g, ra, SC, '|');
         }
         // center
         setAt(g, SR, SC, '+');
@@ -165,7 +106,6 @@ title: Home
     }
 
     function drawVector(g, angle) {
-        // draw from center toward (SR - SRY*sin, SC + SRX*cos)
         var dr = -SRY * Math.sin(angle);
         var dc = SRX * Math.cos(angle);
         var steps = Math.round(Math.max(Math.abs(dr), Math.abs(dc)));
@@ -173,24 +113,52 @@ title: Home
         for (var i = 1; i <= steps; i++) {
             var rr = Math.round(SR + dr * i / steps);
             var cc = Math.round(SC + dc * i / steps);
-            if (i === steps) {
-                setAt(g, rr, cc, '●'); // ●
-            } else {
-                setAt(g, rr, cc, '*');
+            if (i === steps) setAt(g, rr, cc, '●');
+            else setAt(g, rr, cc, '*');
+        }
+    }
+
+    // Weighted noise: mostly dots, occasional commas/quotes.
+    function noiseChar() {
+        var r = Math.random();
+        if (r < 0.55) return '.';
+        if (r < 0.80) return ',';
+        if (r < 0.92) return "'";
+        if (r < 0.98) return '`';
+        return ';';
+    }
+
+    function inDiamondZone(r, c) {
+        return r >= DTOP - 1 && r <= DTOP + DH + 2 &&
+               c >= DLEFT - 1 && c <= DLEFT + DW;
+    }
+    function inSphereZone(r, c) {
+        return r >= SR - SRY - 1 && r <= SR + SRY + 1 &&
+               c >= SC - SRX - 4 && c <= SC + SRX + 4;
+    }
+
+    function addNoise(g) {
+        var density = 0.05;
+        for (var r = 0; r < ROWS; r++) {
+            if (r === 0 || r === ROWS - 1) continue; // leave title/caption rows clean
+            for (var c = 0; c < COLS; c++) {
+                if (g[r][c] !== ' ') continue;
+                if (inDiamondZone(r, c) || inSphereZone(r, c)) continue;
+                if (Math.random() < density) g[r][c] = noiseChar();
             }
         }
     }
 
     function frame(t) {
         var g = blank();
-        drawString(g, 0, 5, '~ D I A M O N D ~');
-        drawString(g, 0, 45, '~ B L O C H   S P H E R E ~');
-        drawDiamond(g, t);
+        drawString(g, 0, 2, '~ D I A M O N D ~');
+        drawString(g, 0, 40, '~ B L O C H   S P H E R E ~');
+        drawDiamond(g);
         drawSphere(g);
-        // state vector starts pointing up (|0>), rotates clockwise
-        var angle = Math.PI / 2 - (t * Math.PI / 12);
+        var angle = Math.PI / 2 - (t * Math.PI / 12); // start at |0>, rotate CW
         drawVector(g, angle);
-        drawString(g, ROWS - 1, 41, '|ψ⟩ = α|0⟩ + β|1⟩');
+        drawString(g, ROWS - 1, 38, '|ψ⟩ = α|0⟩ + β|1⟩');
+        addNoise(g);
         return render(g);
     }
 
