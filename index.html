@@ -18,14 +18,3 @@ title: Home
     </li>
     {% endfor %}
 </ul>
-
-<h2>Categories</h2>
-
-<ul>
-    {% for category in site.categories %}
-    <li>
-        <a href="{{ '/categories' | relative_url }}#{{ category[0] | slugify }}">{{ category[0] }}</a>
-        ({{ category[1] | size }})
-    </li>
-    {% endfor %}
-</ul>

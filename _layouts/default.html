@@ -11,15 +11,50 @@
 <div class="site-header">
     <h1><a href="{{ '/' | relative_url }}">{{ site.title }}</a></h1>
     <div class="site-nav">
-        [ <a href="{{ '/' | relative_url }}">Home</a> |
-        <a href="{{ '/categories' | relative_url }}">Categories</a> |
+        {% assign current = page.url %}
+        [ <a href="{{ '/' | relative_url }}">{% if current == '/' or current == '/index.html' %}<b>Home</b>{% else %}Home{% endif %}</a> |
+        <a href="{{ '/categories' | relative_url }}">{% if current contains '/categories' %}<b>Categories</b>{% else %}Categories{% endif %}</a> |
         <a href="#">About</a> ]
     </div>
 </div>
 
 <hr>
 
-{{ content }}
+<div class="site-main">
+
+    <aside class="site-sidebar">
+        <h3>Navigation</h3>
+        <ul>
+            <li><a href="{{ '/' | relative_url }}">Home</a></li>
+            <li><a href="{{ '/categories' | relative_url }}">All categories</a></li>
+            <li><a href="#">About</a></li>
+        </ul>
+
+        <h3>Categories</h3>
+        <ul>
+            {% for category in site.categories %}
+            <li>
+                <a href="{{ '/categories' | relative_url }}#{{ category[0] | slugify }}">{{ category[0] }}</a>
+                <span class="sidebar-count">({{ category[1] | size }})</span>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <h3>Recent posts</h3>
+        <ul>
+            {% for post in site.posts limit: 6 %}
+            <li>
+                <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </aside>
+
+    <main class="site-content">
+        {{ content }}
+    </main>
+
+</div>
 
 <hr>
 
