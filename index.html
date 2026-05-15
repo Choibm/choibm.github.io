@@ -4,27 +4,32 @@ title: Home
 ---
 
 <pre class="hero-ascii" id="hero-ascii" aria-hidden="true">loading...</pre>
-<p class="hero-ascii-caption">Fig. &mdash; faceted diamond crystal and a spiraling qubit on the Bloch sphere.</p>
+<p class="hero-ascii-caption">Fig. &mdash; faceted diamond and a spiraling qubit on the Bloch sphere.</p>
 
 <script>
 (function () {
     var el = document.getElementById('hero-ascii');
     if (!el) return;
 
-    var ROWS = 30, COLS = 128;
+    var ROWS = 38, COLS = 128;
 
-    // Diamond gem outline + 2D diamond-cubic lattice fill,
-    // with inner kite-facet edges overlaid for 3D depth (X = facet vertices).
+    // Brilliant-cut diamond outline filled with a 2D diamond-cubic lattice.
+    // Outline (/, \, +, _, V) stays the gem shape; interior shows atoms (C)
+    // bonded by --- (horizontal), | (vertical), \ / (sp3 diagonal) — clipped
+    // to the gem so the cross-section looks like a sliced crystal.
     var LATTICE = (function () {
-        var W = 29;
+        var W = 39;
         var pad = function (s) {
             var p = Math.max(0, Math.floor((W - s.length) / 2));
             return ' '.repeat(p) + s + ' '.repeat(W - s.length - p);
         };
 
+        // 2D diamond-cubic projection: 4-row × 4-col tile.
+        // Atoms at rMod=0,cMod=0 and rMod=2,cMod=2 (interior atoms).
+        // Offsets chosen so atoms land symmetrically around col 19 (gem center).
         function latticeCharAt(r, c) {
             var rMod = ((r - 1) % 4 + 4) % 4;
-            var cMod = ((c - 1) % 4 + 4) % 4;
+            var cMod = ((c - 3) % 4 + 4) % 4;
             if (rMod === 0 && cMod === 0) return 'C';
             if (rMod === 2 && cMod === 2) return 'C';
             if (rMod === 0) return '-';
@@ -55,55 +60,30 @@ title: Home
         var rows = [];
         var gr = 0;
 
-        // Table top (11 wide)
-        rows.push(pad('___________'));
+        // table top
+        rows.push(pad('_____________'));
         gr++;
-        // Crown: 8 rows, widths 13..27 (step 2)
-        for (var i = 1; i <= 8; i++) {
-            rows.push(buildRow(gr, '/', '\\', 11 + 2 * i));
+        // crown: 12 rows, widths 15..37
+        for (var i = 1; i <= 12; i++) {
+            rows.push(buildRow(gr, '/', '\\', 13 + 2 * i));
             gr++;
         }
-        // Girdle: 29 wide
-        rows.push('+' + '-'.repeat(27) + '+');
+        // girdle (width 39)
+        rows.push('+' + '-'.repeat(37) + '+');
         gr++;
-        // Pavilion: 8 rows, widths 27..13
-        for (var j = 8; j >= 1; j--) {
-            rows.push(buildRow(gr, '\\', '/', 11 + 2 * j));
+        // pavilion: 12 rows, widths 37..15
+        for (var j = 12; j >= 1; j--) {
+            rows.push(buildRow(gr, '\\', '/', 13 + 2 * j));
             gr++;
         }
-        // Sub-pavilion narrowing
-        var subWs = [11, 9, 7];
+        // sub-pavilion narrowing: 11, 9, 7, 5, 3
+        var subWs = [11, 9, 7, 5, 3];
         for (var k = 0; k < subWs.length; k++) {
             rows.push(buildRow(gr, '\\', '/', subWs[k]));
             gr++;
         }
-        // Culet
+        // culet
         rows.push(pad('V'));
-
-        // -- Overlay inner kite-facet edges for 3D depth --
-        function overlay(r, c, ch) {
-            if (r < 0 || r >= rows.length) return;
-            var row = rows[r];
-            if (c < 0 || c >= row.length) return;
-            rows[r] = row.substring(0, c) + ch + row.substring(c + 1);
-        }
-        var center = 14; // W/2 = 14
-        // Crown inner-left / inner-right edges (rows 1..8)
-        for (var p = 0; p < 8; p++) {
-            overlay(1 + p, center - 1 - p, '/');
-            overlay(1 + p, center + 1 + p, '\\');
-        }
-        // Pavilion inner-left / inner-right edges (rows 10..17)
-        for (var q = 0; q < 8; q++) {
-            overlay(10 + q, center - 8 + q, '\\');
-            overlay(10 + q, center + 8 - q, '/');
-        }
-        // Facet vertices (X) just above and below the girdle on each side
-        overlay(8, center - 8, 'X');
-        overlay(8, center + 8, 'X');
-        overlay(10, center - 8, 'X');
-        overlay(10, center + 8, 'X');
-
         return rows;
     })();
 
@@ -111,8 +91,8 @@ title: Home
     var DW = LATTICE[0].length;
     var DH = LATTICE.length;
 
-    // Bloch sphere — slightly smaller to match the shorter canvas
-    var SR = 15, SC = 90, SRX = 24, SRY = 11;
+    // Bigger Bloch sphere.
+    var SR = 17, SC = 90, SRX = 26, SRY = 13;
 
     function blank() {
         var g = [];
@@ -141,31 +121,36 @@ title: Home
         for (var i = 0; i < DH; i++) {
             drawString(g, DTOP + i, DLEFT, LATTICE[i]);
         }
-        drawString(g, DTOP + DH + 1, DLEFT + 6, 'diamond  (sp3 C)');
+        drawString(g, DTOP + DH + 1, DLEFT + 8, 'diamond  (sp3 C)');
     }
 
     function drawSphere(g) {
+        // outline (denser)
         for (var theta = 0; theta < Math.PI * 2; theta += 0.015) {
             var r = Math.round(SR - SRY * Math.sin(theta));
             var c = Math.round(SC + SRX * Math.cos(theta));
             setAt(g, r, c, '.');
         }
+        // multiple latitude lines (tilted ellipses)
         var lats = [-0.7, -0.35, 0, 0.35, 0.7];
         for (var li = 0; li < lats.length; li++) {
             var zVal = lats[li];
             var radiusScale = Math.sqrt(1 - zVal * zVal);
             var rowOff = -SRY * zVal;
+            // front half visible
             for (var ph = 0; ph <= Math.PI; ph += 0.04) {
-                var rL = Math.round(SR + rowOff + 2 * Math.sin(ph) * radiusScale);
+                var rL = Math.round(SR + rowOff + 2.2 * Math.sin(ph) * radiusScale);
                 var cL = Math.round(SC + SRX * radiusScale * Math.cos(ph));
                 setIfBlank(g, rL, cL, '.');
             }
-            for (var ph2 = Math.PI; ph2 < Math.PI * 2; ph2 += 0.2) {
-                var rL2 = Math.round(SR + rowOff + 2 * Math.sin(ph2) * radiusScale);
+            // back half dashed
+            for (var ph2 = Math.PI; ph2 < Math.PI * 2; ph2 += 0.18) {
+                var rL2 = Math.round(SR + rowOff + 2.2 * Math.sin(ph2) * radiusScale);
                 var cL2 = Math.round(SC + SRX * radiusScale * Math.cos(ph2));
                 setIfBlank(g, rL2, cL2, ',');
             }
         }
+        // multiple meridians
         var meridians = [-0.6, -0.3, 0, 0.3, 0.6];
         for (var mi = 0; mi < meridians.length; mi++) {
             var mTilt = meridians[mi];
@@ -175,7 +160,9 @@ title: Home
                 setIfBlank(g, rM, cM, mi === 2 ? '|' : ':');
             }
         }
+        // center
         setAt(g, SR, SC, '+');
+        // labels
         drawString(g, SR - SRY - 1, SC - 1, '|0⟩');
         drawString(g, SR + SRY + 1, SC - 1, '|1⟩');
         drawString(g, SR, SC + SRX + 2, '|+⟩');
@@ -251,8 +238,8 @@ title: Home
 
     function frame(t) {
         var g = blank();
-        drawString(g, 0, 7, '~ D I A M O N D    L A T T I C E ~');
-        drawString(g, 0, 65, '~ B L O C H   S P H E R E  ( s p i r a l ) ~');
+        drawString(g, 0, 9, '~ D I A M O N D    L A T T I C E ~');
+        drawString(g, 0, 67, '~ B L O C H   S P H E R E  ( s p i r a l ) ~');
         drawDiamond(g);
         drawSphere(g);
         var pos = spiralAt(t);
