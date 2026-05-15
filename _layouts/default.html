@@ -5,11 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page.title }} | {{ site.title }}</title>
+    <meta name="description" content="{{ page.excerpt | default: site.description | strip_html | normalize_whitespace | truncate: 160 }}">
     <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap"
         rel="stylesheet">
 </head>
 
@@ -19,8 +20,9 @@
         <div class="container">
             <a href="{{ '/' | relative_url }}" class="logo">{{ site.title }}</a>
             <nav>
-                <a href="{{ '/' | relative_url }}">Home</a>
-                <a href="{{ '/categories' | relative_url }}">Categories</a>
+                {% assign current = page.url %}
+                <a href="{{ '/' | relative_url }}" {% if current == '/' or current == '/index.html' %}class="is-active"{% endif %}>Home</a>
+                <a href="{{ '/categories' | relative_url }}" {% if current contains '/categories' %}class="is-active"{% endif %}>Categories</a>
                 <a href="#">About</a>
             </nav>
         </div>
@@ -39,11 +41,20 @@
         <aside class="sidebar glass-card">
             <h3>Categories</h3>
             <ul class="sidebar-categories">
-                <li><a href="{{ '/' | relative_url }}#all" class="category-filter active" data-category="all">All
-                        Posts</a></li>
+                <li>
+                    <a href="{{ '/' | relative_url }}#all" class="category-filter active" data-category="all">
+                        <span>All posts</span>
+                        <span class="category-count">{{ site.posts | size }}</span>
+                    </a>
+                </li>
                 {% for category in site.categories %}
-                <li><a href="{{ '/' | relative_url }}#{{ category[0] | slugify }}" class="category-filter"
-                        data-category="{{ category[0] | slugify }}">{{ category[0] | capitalize }}</a></li>
+                <li>
+                    <a href="{{ '/' | relative_url }}#{{ category[0] | slugify }}" class="category-filter"
+                        data-category="{{ category[0] | slugify }}">
+                        <span>{{ category[0] | capitalize }}</span>
+                        <span class="category-count">{{ category[1] | size }}</span>
+                    </a>
+                </li>
                 {% endfor %}
             </ul>
         </aside>
@@ -67,14 +78,10 @@
 
                 posts.forEach(post => {
                     if (category === 'all') {
-                        post.style.display = 'block';
+                        post.style.display = '';
                     } else {
-                        const postCategories = post.getAttribute('data-categories').trim().split(' ');
-                        if (postCategories.includes(category)) {
-                            post.style.display = 'block';
-                        } else {
-                            post.style.display = 'none';
-                        }
+                        const postCategories = (post.getAttribute('data-categories') || '').trim().split(/\s+/);
+                        post.style.display = postCategories.includes(category) ? '' : 'none';
                     }
                 });
             }
@@ -97,8 +104,14 @@
         });
     </script>
 
-    <footer class="container">
-        <p>&copy; {{ site.time | date: '%Y' }} {{ site.title }}.</p>
+    <footer>
+        <div>
+            &copy; {{ site.time | date: '%Y' }} {{ site.title }}
+            <span class="foot-dot">·</span>
+            Built with Jekyll
+            <span class="foot-dot">·</span>
+            Quantum · Semiconductor · Materials
+        </div>
     </footer>
 </body>
 

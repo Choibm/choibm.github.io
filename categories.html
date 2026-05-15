@@ -4,16 +4,25 @@ title: Categories
 ---
 
 <section class="categories-page glass-card">
-    <h1>Post Categories</h1>
+    <div class="section-header">
+        <h1>Post categories</h1>
+        <span class="section-eyebrow">{{ site.categories | size }} categories</span>
+    </div>
 
     {% for category in site.categories %}
     <div class="category-section" id="{{ category[0] | slugify }}">
-        <h2 class="category-title">{{ category[0] | capitalize }}</h2>
+        <h2 class="category-title">
+            {{ category[0] | capitalize }}
+            <small>{{ category[1] | size }} posts</small>
+        </h2>
         <ul class="posts">
             {% for post in category[1] %}
             <li class="post-item glass-card clickable" onclick="location.href='{{ post.url | relative_url }}'">
-                <span class="post-date">{{ post.date | date: "%b %-d, %Y" }}</span>
+                <div class="post-meta-header">
+                    <span class="post-date">{{ post.date | date: "%b %-d, %Y" }}</span>
+                </div>
                 <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
+                <span class="post-readmore">Read article <span aria-hidden="true">→</span></span>
             </li>
             {% endfor %}
         </ul>

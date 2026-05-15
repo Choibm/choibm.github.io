@@ -1,92 +1,119 @@
 <style>
-    :root {
-        --bg-color: #121212;
-        --p-color: #e3f2fd;
-        --n-color: #f1f8e9;
-        --hole-color: #ff5252;
-        --electron-color: #448aff;
-        --flash-color: #ffeb3b;
-    }
-
     .simulator-container {
+        --sim-bg: rgba(8, 14, 26, 0.78);
+        --sim-bg-canvas: #060b16;
+        --sim-line: rgba(140, 178, 235, 0.18);
+        --sim-text: #e8eeff;
+        --sim-text-dim: #98a8c8;
+        --sim-hole: #ff7585;
+        --sim-electron: #5cd7ff;
+        --sim-flash: #ffd479;
+
         width: 100%;
-        max-width: 850px;
-        margin: 20px auto;
-        background: var(--bg-color);
-        color: white;
-        padding: 25px;
-        border-radius: 15px;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        max-width: 880px;
+        margin: 1.6rem auto;
+        background: var(--sim-bg);
+        color: var(--sim-text);
+        padding: 1.6rem;
+        border: 1px solid var(--sim-line);
+        border-radius: 16px;
+        font-family: 'Manrope', 'Segoe UI', sans-serif;
+        box-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(14px) saturate(140%);
+        -webkit-backdrop-filter: blur(14px) saturate(140%);
     }
 
-    .controls {
+    .simulator-container .controls {
         display: flex;
         justify-content: center;
-        gap: 15px;
-        margin-bottom: 25px;
+        gap: 0.6rem;
+        margin-bottom: 1.4rem;
+        flex-wrap: wrap;
     }
 
-    .btn {
-        padding: 12px 24px;
-        border: none;
-        border-radius: 8px;
+    .simulator-container .btn {
+        padding: 0.65rem 1.1rem;
+        border: 1px solid transparent;
+        border-radius: 10px;
         cursor: pointer;
-        font-weight: 600;
-        transition: all 0.2s;
+        font-weight: 700;
+        font-size: 0.78rem;
+        transition: all 0.2s ease;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.1em;
+        font-family: 'JetBrains Mono', 'Consolas', monospace;
+        background: rgba(9, 18, 36, 0.6);
+        color: var(--sim-text);
+        border-color: var(--sim-line);
     }
 
-    .btn-rev {
-        background: #d32f2f;
-        color: white;
+    .simulator-container .btn:hover {
+        border-color: rgba(140, 184, 255, 0.42);
+        background: rgba(9, 18, 36, 0.85);
     }
 
-    .btn-eq {
-        background: #757575;
-        color: white;
+    .simulator-container .btn-rev.active {
+        background: rgba(255, 117, 133, 0.16);
+        border-color: rgba(255, 117, 133, 0.5);
+        color: #ffb3bd;
     }
 
-    .btn-fwd {
-        background: #388e3c;
-        color: white;
+    .simulator-container .btn-eq.active {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.32);
+        color: #ffffff;
     }
 
-    .active {
-        outline: 3px solid white;
-        outline-offset: 2px;
+    .simulator-container .btn-fwd.active {
+        background: rgba(92, 215, 255, 0.16);
+        border-color: rgba(92, 215, 255, 0.5);
+        color: #aeebff;
     }
 
-    .diagram-label {
+    .simulator-container .diagram-label {
         text-align: center;
-        font-size: 0.9rem;
-        color: #aaa;
-        margin: 10px 0;
+        font-size: 0.72rem;
+        color: var(--sim-text-dim);
+        margin: 0.9rem 0 0.5rem;
+        font-family: 'JetBrains Mono', 'Consolas', monospace;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
     }
 
-    canvas {
+    .simulator-container canvas {
         display: block;
         margin: 0 auto;
-        border-radius: 5px;
-        background: #000;
+        border-radius: 10px;
+        background: var(--sim-bg-canvas);
+        border: 1px solid var(--sim-line);
+        max-width: 100%;
+        height: auto;
     }
 
-    #energy-diagram {
+    .simulator-container #energy-diagram {
         width: 100%;
         height: 280px;
-        margin-top: 20px;
-        background: #1a1a1a;
-        border-radius: 5px;
+        margin-top: 0.5rem;
+        background: var(--sim-bg-canvas);
+        border-radius: 10px;
+        border: 1px solid var(--sim-line);
     }
 
-    .legend {
+    .simulator-container .legend {
         display: flex;
         justify-content: center;
-        gap: 20px;
-        font-size: 0.85rem;
-        margin-top: 15px;
+        gap: 1.1rem;
+        font-size: 0.78rem;
+        margin-top: 1rem;
         flex-wrap: wrap;
+        color: var(--sim-text-dim);
+        font-family: 'JetBrains Mono', 'Consolas', monospace;
+        letter-spacing: 0.04em;
+    }
+
+    .simulator-container .legend b {
+        font-size: 1rem;
+        margin-right: 0.2rem;
     }
 </style>
 
@@ -98,30 +125,30 @@
         <button class="btn btn-fwd" onclick="setBias('forward', this)">Forward Bias</button>
     </div>
 
-    <div class="diagram-label">Physical P-N Junction (Recombination Flashes)</div>
+    <div class="diagram-label">Physical P–N junction · recombination flashes</div>
     <canvas id="junctionCanvas" width="800" height="240"></canvas>
 
-    <div class="diagram-label">Energy Band Diagram (Correct Fermi Level Split)</div>
+    <div class="diagram-label">Energy band diagram · Fermi level split</div>
     <svg id="energy-diagram" viewBox="0 0 800 280">
-        <path id="path-ec" stroke="#fff" fill="transparent" stroke-width="2" />
-        <path id="path-ev" stroke="#fff" fill="transparent" stroke-width="2" />
+        <path id="path-ec" stroke="#eef3ff" fill="transparent" stroke-width="2" />
+        <path id="path-ev" stroke="#eef3ff" fill="transparent" stroke-width="2" />
 
-        <path id="path-ef-p" stroke="#ffeb3b" fill="transparent" stroke-width="2" stroke-dasharray="5,5" />
-        <path id="path-ef-n" stroke="#ffeb3b" fill="transparent" stroke-width="2" stroke-dasharray="5,5" />
+        <path id="path-ef-p" stroke="#ffd479" fill="transparent" stroke-width="2" stroke-dasharray="5,5" />
+        <path id="path-ef-n" stroke="#ffd479" fill="transparent" stroke-width="2" stroke-dasharray="5,5" />
 
-        <text x="10" y="30" fill="white" font-size="12">Ec</text>
-        <text x="10" y="270" fill="white" font-size="12">Ev</text>
-        <text id="label-efp" x="10" y="0" fill="#ffeb3b" font-size="12">Efp</text>
-        <text id="label-efn" x="760" y="0" fill="#ffeb3b" font-size="12">Efn</text>
+        <text x="10" y="30" fill="#c9d4ee" font-size="12" font-family="JetBrains Mono, monospace">Ec</text>
+        <text x="10" y="270" fill="#c9d4ee" font-size="12" font-family="JetBrains Mono, monospace">Ev</text>
+        <text id="label-efp" x="10" y="0" fill="#ffd479" font-size="12" font-family="JetBrains Mono, monospace">Efp</text>
+        <text id="label-efn" x="760" y="0" fill="#ffd479" font-size="12" font-family="JetBrains Mono, monospace">Efn</text>
 
         <g id="energy-particles"></g>
     </svg>
 
     <div class="legend">
-        <span><b style="color:var(--hole-color)">○</b> Hole</span>
-        <span><b style="color:var(--electron-color)">●</b> Electron</span>
-        <span><b style="color:var(--flash-color)">★</b> Recombination</span>
-        <span style="color:#ffeb3b; border-bottom: 2px dashed #ffeb3b;">-- Fermi Level</span>
+        <span><b style="color:#ff7585">○</b> Hole</span>
+        <span><b style="color:#5cd7ff">●</b> Electron</span>
+        <span><b style="color:#ffd479">★</b> Recombination</span>
+        <span style="color:#ffd479; border-bottom: 2px dashed #ffd479;">— Fermi level</span>
     </div>
 </div>
 
@@ -166,7 +193,7 @@
             ctx.save();
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 235, 59, ${this.opacity})`;
+            ctx.fillStyle = `rgba(255, 212, 121, ${this.opacity})`;
             ctx.fill();
             ctx.restore();
         }
@@ -263,11 +290,11 @@
             ctx.beginPath();
             ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
             if (this.type === 'hole') {
-                ctx.strokeStyle = '#ff5252';
+                ctx.strokeStyle = '#ff7585';
                 ctx.lineWidth = 2;
                 ctx.stroke();
             } else {
-                ctx.fillStyle = '#448aff';
+                ctx.fillStyle = '#5cd7ff';
                 ctx.fill();
             }
             ctx.restore();
@@ -282,11 +309,11 @@
             this.el = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             this.el.setAttribute("r", "5");
             if (type === 'hole') {
-                this.el.setAttribute("stroke", "#ff5252");
+                this.el.setAttribute("stroke", "#ff7585");
                 this.el.setAttribute("stroke-width", "2");
                 this.el.setAttribute("fill", "none");
             } else {
-                this.el.setAttribute("fill", "#448aff");
+                this.el.setAttribute("fill", "#5cd7ff");
             }
             energyParticleG.appendChild(this.el);
             this.recombining = false;
@@ -430,31 +457,52 @@
     }
 
     function drawStructure() {
-        ctx.fillStyle = '#0d47a1';
+        const pGrad = ctx.createLinearGradient(0, 0, 400, 0);
+        pGrad.addColorStop(0, 'rgba(255, 117, 133, 0.16)');
+        pGrad.addColorStop(1, 'rgba(255, 117, 133, 0.06)');
+        ctx.fillStyle = pGrad;
         ctx.fillRect(0, 0, 400, 240);
-        ctx.fillStyle = '#1b5e20';
+
+        const nGrad = ctx.createLinearGradient(400, 0, 800, 0);
+        nGrad.addColorStop(0, 'rgba(92, 215, 255, 0.06)');
+        nGrad.addColorStop(1, 'rgba(92, 215, 255, 0.18)');
+        ctx.fillStyle = nGrad;
         ctx.fillRect(400, 0, 400, 240);
-        ctx.fillStyle = 'rgba(200, 200, 200, 0.4)';
+
+        ctx.fillStyle = 'rgba(220, 232, 255, 0.10)';
         ctx.fillRect(400 - depletionWidth / 2, 0, depletionWidth, 240);
 
-        ctx.font = "bold 14px Arial"; ctx.textAlign = "center";
-        ctx.fillStyle = "#ffccbc";
+        ctx.strokeStyle = 'rgba(220, 232, 255, 0.22)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(400 - depletionWidth / 2, 0);
+        ctx.lineTo(400 - depletionWidth / 2, 240);
+        ctx.moveTo(400 + depletionWidth / 2, 0);
+        ctx.lineTo(400 + depletionWidth / 2, 240);
+        ctx.stroke();
+
+        ctx.font = "bold 14px 'JetBrains Mono', monospace"; ctx.textAlign = "center";
+        ctx.fillStyle = "rgba(255, 117, 133, 0.85)";
         for (let i = 1; i < 4; i++) {
             for (let j = 1; j < 4; j++) {
                 let x = 400 - (depletionWidth / 4) * i;
                 if (x > 400 - depletionWidth / 2) ctx.fillText("-", x, 60 * j);
             }
         }
-        ctx.fillStyle = "#c8e6c9";
+        ctx.fillStyle = "rgba(92, 215, 255, 0.9)";
         for (let i = 1; i < 4; i++) {
             for (let j = 1; j < 4; j++) {
                 let x = 400 + (depletionWidth / 4) * i;
                 if (x < 400 + depletionWidth / 2) ctx.fillText("+", x, 60 * j);
             }
         }
-        ctx.fillStyle = "white";
-        ctx.fillText("P-TYPE", 50, 30);
-        ctx.fillText("N-TYPE", 750, 30);
+        ctx.font = "600 12px 'JetBrains Mono', monospace";
+        ctx.fillStyle = "rgba(255, 180, 190, 0.92)";
+        ctx.textAlign = "left";
+        ctx.fillText("P-TYPE", 16, 24);
+        ctx.fillStyle = "rgba(170, 226, 255, 0.92)";
+        ctx.textAlign = "right";
+        ctx.fillText("N-TYPE", 784, 24);
     }
 
     function updateEnergyDiagram() {

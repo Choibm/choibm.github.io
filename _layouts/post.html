@@ -3,10 +3,17 @@ layout: default
 ---
 <article class="post-content glass-card">
     <header class="post-header">
+        {% if page.categories and page.categories.size > 0 %}
+        <p class="post-eyebrow">
+            {% for cat in page.categories %}
+            <span>{{ cat | capitalize }}</span>{% unless forloop.last %} · {% endunless %}
+            {% endfor %}
+        </p>
+        {% endif %}
         <h1 class="post-title">{{ page.title }}</h1>
         <p class="post-meta">
             <time datetime="{{ page.date | date_to_xmlschema }}">
-                {{ page.date | date: "%b %-d, %Y" }}
+                {{ page.date | date: "%B %-d, %Y" }}
             </time>
         </p>
     </header>
@@ -16,6 +23,8 @@ layout: default
     </div>
 
     <div class="post-footer">
-        <a href="{{ '/' | relative_url }}" class="back-link">← Back to Home</a>
+        <a href="{{ '/' | relative_url }}" class="back-link">
+            <span aria-hidden="true">←</span> Back to home
+        </a>
     </div>
 </article>

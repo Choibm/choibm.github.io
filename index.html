@@ -5,12 +5,17 @@ show_hero: true
 ---
 
 <section class="post-list">
-    <h2>Latest Posts</h2>
+    <div class="section-header">
+        <h2>Latest posts</h2>
+        <span class="section-eyebrow">{{ site.posts | size }} entries</span>
+    </div>
     <ul class="posts">
         {% for post in site.posts %}
+        {% assign post_number = forloop.length | minus: forloop.index0 %}
         <li class="post-item glass-card clickable"
             data-categories="{% for cat in post.categories %}{{ cat | slugify }} {% endfor %}"
             onclick="location.href='{{ post.url | relative_url }}'">
+            <span class="post-index">{{ post_number | prepend: '000' | slice: -3, 3 }}</span>
             <div class="post-meta-header">
                 <span class="post-date">{{ post.date | date: "%b %-d, %Y" }}</span>
                 <div class="category-tags">
@@ -20,7 +25,10 @@ show_hero: true
                 </div>
             </div>
             <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
-            <p class="post-excerpt">{{ post.excerpt | strip_html | truncatewords: 25 }}</p>
+            {% if post.excerpt and post.excerpt != '' %}
+            <p class="post-excerpt">{{ post.excerpt | strip_html | truncatewords: 28 }}</p>
+            {% endif %}
+            <span class="post-readmore">Read article <span aria-hidden="true">→</span></span>
         </li>
         {% endfor %}
     </ul>

@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const anchorBlueprints = [
-        { label: 'QI', x: 0.2, y: 0.34, color: '#63e4ff', halo: 'rgba(99, 228, 255, 0.34)' },
-        { label: 'Si', x: 0.5, y: 0.62, color: '#57ffc6', halo: 'rgba(87, 255, 198, 0.3)' },
-        { label: 'MAT', x: 0.79, y: 0.4, color: '#ffd27c', halo: 'rgba(255, 210, 124, 0.28)' }
+        { label: 'QI', x: 0.22, y: 0.34, color: '#5cd7ff', halo: 'rgba(92, 215, 255, 0.30)' },
+        { label: 'Si', x: 0.5, y: 0.66, color: '#74ffd1', halo: 'rgba(116, 255, 209, 0.26)' },
+        { label: 'MAT', x: 0.78, y: 0.4, color: '#ffc173', halo: 'rgba(255, 193, 115, 0.24)' }
     ];
 
     let particles = [];
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function rebuildScene() {
-        const targetCount = clamp(Math.floor((width * height) / 18000), 60, 150);
+        const targetCount = clamp(Math.floor((width * height) / 26000), 50, 110);
         particles = Array.from({ length: targetCount }, createParticle);
     }
 
@@ -64,18 +64,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function drawBackdrop() {
         const backdrop = ctx.createLinearGradient(0, 0, 0, height);
-        backdrop.addColorStop(0, '#060b16');
-        backdrop.addColorStop(0.6, '#050a14');
-        backdrop.addColorStop(1, '#04070f');
+        backdrop.addColorStop(0, '#050a14');
+        backdrop.addColorStop(0.6, '#04081099');
+        backdrop.addColorStop(1, '#03060d');
 
         ctx.fillStyle = backdrop;
         ctx.fillRect(0, 0, width, height);
 
-        const spacing = clamp(Math.round(width / 26), 32, 56);
-        const xOffset = (tick * 0.2) % spacing;
-        const yOffset = (tick * 0.12) % spacing;
+        const spacing = clamp(Math.round(width / 22), 36, 64);
+        const xOffset = (tick * 0.15) % spacing;
+        const yOffset = (tick * 0.09) % spacing;
 
-        ctx.strokeStyle = 'rgba(99, 228, 255, 0.075)';
+        ctx.strokeStyle = 'rgba(92, 215, 255, 0.05)';
         ctx.lineWidth = 1;
         ctx.beginPath();
 
@@ -181,9 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const distance = Math.hypot(dx, dy);
 
                 if (distance < threshold) {
-                    const alpha = 0.22 * (1 - distance / threshold);
+                    const alpha = 0.16 * (1 - distance / threshold);
                     ctx.beginPath();
-                    ctx.strokeStyle = `rgba(99, 228, 255, ${alpha})`;
+                    ctx.strokeStyle = `rgba(92, 215, 255, ${alpha})`;
                     ctx.lineWidth = 1;
                     ctx.moveTo(p.x, p.y);
                     ctx.lineTo(n.x, n.y);
@@ -198,9 +198,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const anchorThreshold = threshold * 1.15;
 
                 if (distance < anchorThreshold) {
-                    const alpha = 0.28 * (1 - distance / anchorThreshold);
+                    const alpha = 0.22 * (1 - distance / anchorThreshold);
                     ctx.beginPath();
-                    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                    ctx.strokeStyle = `rgba(220, 234, 255, ${alpha})`;
                     ctx.lineWidth = 0.9;
                     ctx.moveTo(p.x, p.y);
                     ctx.lineTo(anchor.x, anchor.y);
@@ -212,9 +212,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function drawParticles() {
         particles.forEach(particle => {
-            const glow = 0.3 + Math.sin(particle.phase + tick * 0.01) * 0.18;
+            const glow = 0.2 + Math.sin(particle.phase + tick * 0.01) * 0.14;
             ctx.beginPath();
-            ctx.fillStyle = `rgba(168, 226, 255, ${0.42 + glow})`;
+            ctx.fillStyle = `rgba(180, 232, 255, ${0.32 + glow})`;
             ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
             ctx.fill();
         });
