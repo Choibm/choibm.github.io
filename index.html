@@ -3,6 +3,75 @@ layout: default
 title: Home
 ---
 
+<pre class="hero-ascii" id="hero-ascii" aria-hidden="true">
+              hv (photon)
+      _/\_/\_/\_/\_/\_/\_/\_/\_/\_
+                  |
+                  v
+  +-------------------------------+
+  | Si Si Si Si Si Si Si Si Si Si |
+  | Si Si Si Si Si Si Si Si Si Si |
+  | Si Si Si Si Si Si Si Si Si Si |
+  +-------------------------------+
+                  |
+                  v
+      o-&gt; o-&gt; o-&gt; o-&gt; o-&gt; o-&gt; o-&gt;
+      ---- photocurrent ----&gt;
+</pre>
+<p class="hero-ascii-caption">Fig. &mdash; photogeneration of carriers in silicon.</p>
+
+<script>
+(function () {
+    var el = document.getElementById('hero-ascii');
+    if (!el) return;
+
+    var WIDTH = 28;
+    var WAVE_PAT = "_/\\";   // length 3
+    var ELEC_PAT = "o-> ";   // length 4
+
+    function shifted(pat, len, offset) {
+        var L = pat.length;
+        var out = "";
+        for (var i = 0; i < len; i++) {
+            out += pat.charAt(((i - offset) % L + L) % L);
+        }
+        return out;
+    }
+
+    function frame(t) {
+        var wave = shifted(WAVE_PAT, WIDTH, t);
+        var elec = shifted(ELEC_PAT, WIDTH, t);
+        return [
+            "              hv (photon)",
+            "      " + wave,
+            "                  |",
+            "                  v",
+            "  +-------------------------------+",
+            "  | Si Si Si Si Si Si Si Si Si Si |",
+            "  | Si Si Si Si Si Si Si Si Si Si |",
+            "  | Si Si Si Si Si Si Si Si Si Si |",
+            "  +-------------------------------+",
+            "                  |",
+            "                  v",
+            "      " + elec,
+            "      ---- photocurrent ---->"
+        ].join("\n");
+    }
+
+    el.textContent = frame(0);
+
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+    }
+
+    var t = 0;
+    setInterval(function () {
+        t = (t + 1) % 12;
+        el.textContent = frame(t);
+    }, 200);
+})();
+</script>
+
 <p>Welcome. This is a small personal homepage where I keep notes and the occasional write-up.</p>
 
 <h2>Posts</h2>

@@ -243,6 +243,30 @@ table th, table td {
 
 .text-center { text-align: center; }
 
+/* Hero ASCII animation. */
+.hero-ascii {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 13px;
+    line-height: 1.2;
+    color: #000;
+    background: #fff;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    padding: 0.9em 0.5em;
+    margin: 0.4em 0 0.3em;
+    white-space: pre;
+    overflow-x: auto;
+    text-align: left;
+}
+
+.hero-ascii-caption {
+    text-align: center;
+    font-style: italic;
+    font-size: 0.85em;
+    color: #444;
+    margin: 0 0 1.2em;
+}
+
 /* Mobile: collapse to single column. */
 @media (max-width: 720px) {
     body {
