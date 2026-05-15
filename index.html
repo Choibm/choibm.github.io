@@ -4,95 +4,26 @@ title: Home
 ---
 
 <pre class="hero-ascii" id="hero-ascii" aria-hidden="true">loading...</pre>
-<p class="hero-ascii-caption">Fig. &mdash; faceted diamond and a spiraling qubit on the Bloch sphere.</p>
+<p class="hero-ascii-caption">Fig. &mdash; a qubit spiraling on a Lambert-shaded Bloch sphere.</p>
 
 <script>
 (function () {
     var el = document.getElementById('hero-ascii');
     if (!el) return;
 
-    var ROWS = 38, COLS = 128;
+    var ROWS = 44, COLS = 132;
 
-    // Brilliant-cut diamond outline filled with a 2D diamond-cubic lattice.
-    // Outline (/, \, +, _, V) stays the gem shape; interior shows atoms (C)
-    // bonded by --- (horizontal), | (vertical), \ / (sp3 diagonal) — clipped
-    // to the gem so the cross-section looks like a sliced crystal.
-    var LATTICE = (function () {
-        var W = 39;
-        var pad = function (s) {
-            var p = Math.max(0, Math.floor((W - s.length) / 2));
-            return ' '.repeat(p) + s + ' '.repeat(W - s.length - p);
-        };
+    // Bloch sphere geometry — SRX:SRY ≈ 2:1 so the disk reads as round
+    // in a monospace grid (chars are roughly twice as tall as wide).
+    var SR = 21, SC = 66, SRX = 38, SRY = 19;
 
-        // 2D diamond-cubic projection: 4-row × 4-col tile.
-        // Atoms at rMod=0,cMod=0 and rMod=2,cMod=2 (interior atoms).
-        // Offsets chosen so atoms land symmetrically around col 19 (gem center).
-        function latticeCharAt(r, c) {
-            var rMod = ((r - 1) % 4 + 4) % 4;
-            var cMod = ((c - 3) % 4 + 4) % 4;
-            if (rMod === 0 && cMod === 0) return 'C';
-            if (rMod === 2 && cMod === 2) return 'C';
-            if (rMod === 0) return '-';
-            if (cMod === 0) return '|';
-            if (rMod === 1) {
-                if (cMod === 1) return '\\';
-                if (cMod === 3) return '/';
-            }
-            if (rMod === 3) {
-                if (cMod === 1) return '/';
-                if (cMod === 3) return '\\';
-            }
-            return ' ';
-        }
+    // Brightness palette: lit → shadow on white page (sparse → dense ink).
+    var PAL = ".`'\",:;-~=+itosfXa#bk@$M";
+    var PAL_LEN = PAL.length;
 
-        function buildRow(gr, leftCh, rightCh, w) {
-            if (w <= 1) return pad(leftCh);
-            var arr = new Array(w);
-            arr[0] = leftCh;
-            arr[w - 1] = rightCh;
-            var startCol = Math.floor((W - w) / 2);
-            for (var c = 1; c < w - 1; c++) {
-                arr[c] = latticeCharAt(gr, startCol + c);
-            }
-            return pad(arr.join(''));
-        }
-
-        var rows = [];
-        var gr = 0;
-
-        // table top
-        rows.push(pad('_____________'));
-        gr++;
-        // crown: 12 rows, widths 15..37
-        for (var i = 1; i <= 12; i++) {
-            rows.push(buildRow(gr, '/', '\\', 13 + 2 * i));
-            gr++;
-        }
-        // girdle (width 39)
-        rows.push('+' + '-'.repeat(37) + '+');
-        gr++;
-        // pavilion: 12 rows, widths 37..15
-        for (var j = 12; j >= 1; j--) {
-            rows.push(buildRow(gr, '\\', '/', 13 + 2 * j));
-            gr++;
-        }
-        // sub-pavilion narrowing: 11, 9, 7, 5, 3
-        var subWs = [11, 9, 7, 5, 3];
-        for (var k = 0; k < subWs.length; k++) {
-            rows.push(buildRow(gr, '\\', '/', subWs[k]));
-            gr++;
-        }
-        // culet
-        rows.push(pad('V'));
-        return rows;
-    })();
-
-    var DTOP = 2, DLEFT = 3;
-    var DW = LATTICE[0].length;
-    var DH = LATTICE.length;
-
-    // Bigger Bloch sphere.
-    var SR = 17, SC = 90, SRX = 26, SRY = 13;
+    // Light direction (sphere coords): X = right, Y = up (screen), Z = viewer.
+    // Light from upper-left + slightly toward viewer.
+    var LX = -0.45, LY = 0.50, LZ = 0.74;
 
     function blank() {
         var g = [];
@@ -117,110 +48,126 @@ title: Home
         return g.map(function (row) { return row.join(''); }).join('\n');
     }
 
-    function drawDiamond(g) {
-        for (var i = 0; i < DH; i++) {
-            drawString(g, DTOP + i, DLEFT, LATTICE[i]);
-        }
-        drawString(g, DTOP + DH + 1, DLEFT + 8, 'diamond  (sp3 C)');
-    }
+    function drawShadedSphere(g) {
+        var rMin = SR - SRY - 1, rMax = SR + SRY + 1;
+        var cMin = SC - SRX - 1, cMax = SC + SRX + 1;
+        for (var r = rMin; r <= rMax; r++) {
+            for (var c = cMin; c <= cMax; c++) {
+                if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
+                var nx = (c - SC) / SRX;       // screen normalized x
+                var ny = (r - SR) / SRY;       // screen normalized y (down +)
+                var rho2 = nx * nx + ny * ny;
+                if (rho2 > 1) continue;
 
-    function drawSphere(g) {
-        // outline (denser)
-        for (var theta = 0; theta < Math.PI * 2; theta += 0.015) {
-            var r = Math.round(SR - SRY * Math.sin(theta));
-            var c = Math.round(SC + SRX * Math.cos(theta));
-            setAt(g, r, c, '.');
-        }
-        // multiple latitude lines (tilted ellipses)
-        var lats = [-0.7, -0.35, 0, 0.35, 0.7];
-        for (var li = 0; li < lats.length; li++) {
-            var zVal = lats[li];
-            var radiusScale = Math.sqrt(1 - zVal * zVal);
-            var rowOff = -SRY * zVal;
-            // front half visible
-            for (var ph = 0; ph <= Math.PI; ph += 0.04) {
-                var rL = Math.round(SR + rowOff + 2.2 * Math.sin(ph) * radiusScale);
-                var cL = Math.round(SC + SRX * radiusScale * Math.cos(ph));
-                setIfBlank(g, rL, cL, '.');
-            }
-            // back half dashed
-            for (var ph2 = Math.PI; ph2 < Math.PI * 2; ph2 += 0.18) {
-                var rL2 = Math.round(SR + rowOff + 2.2 * Math.sin(ph2) * radiusScale);
-                var cL2 = Math.round(SC + SRX * radiusScale * Math.cos(ph2));
-                setIfBlank(g, rL2, cL2, ',');
+                var X = nx;                     // right
+                var Y = -ny;                    // up
+                var Z = Math.sqrt(1 - rho2);    // toward viewer
+
+                // Lambertian diffuse
+                var b = X * LX + Y * LY + Z * LZ;
+                // Specular highlight
+                var spec = Math.max(0, b);
+                spec = Math.pow(spec, 28) * 0.55;
+                b = b + spec;
+                b = Math.max(0, Math.min(1, b));
+
+                var idx = Math.floor((1 - b) * (PAL_LEN - 1) + 0.5);
+                if (idx < 0) idx = 0;
+                if (idx >= PAL_LEN) idx = PAL_LEN - 1;
+                setAt(g, r, c, PAL.charAt(idx));
             }
         }
-        // multiple meridians
-        var meridians = [-0.6, -0.3, 0, 0.3, 0.6];
-        for (var mi = 0; mi < meridians.length; mi++) {
-            var mTilt = meridians[mi];
-            for (var ps = 0.04; ps <= Math.PI - 0.04; ps += 0.03) {
-                var rM = Math.round(SR - SRY * Math.cos(ps));
-                var cM = Math.round(SC + (SRX * mTilt) * Math.sin(ps));
-                setIfBlank(g, rM, cM, mi === 2 ? '|' : ':');
+
+        // Front equator overlay (Bloch X-Y plane, Z=0). Visible at screen row SR.
+        for (var et = 0.05; et < Math.PI - 0.05; et += 0.02) {
+            var ce = Math.round(SC + Math.cos(et) * SRX);
+            if (g[SR] && g[SR][ce] !== undefined && g[SR][ce] !== ' ') {
+                g[SR][ce] = '-';
             }
         }
-        // center
+        // Polar (Z) axis — vertical line through center.
+        for (var rz = SR - SRY + 1; rz <= SR + SRY - 1; rz++) {
+            if (rz === SR) continue;
+            if (g[rz] && g[rz][SC] !== ' ') g[rz][SC] = '|';
+        }
+        // Center pivot
         setAt(g, SR, SC, '+');
-        // labels
+
+        // Pole / cardinal labels
         drawString(g, SR - SRY - 1, SC - 1, '|0⟩');
         drawString(g, SR + SRY + 1, SC - 1, '|1⟩');
         drawString(g, SR, SC + SRX + 2, '|+⟩');
         drawString(g, SR, SC - SRX - 4, '|-⟩');
+
+        // Soft cast shadow on the "floor" just below the sphere.
+        var shadowR = SR + SRY + 2;
+        if (shadowR < ROWS - 1) {
+            var halfW = SRX;
+            for (var sc = -halfW; sc <= halfW; sc++) {
+                var u = sc / halfW;
+                var a = 1 - u * u;
+                var ch = a > 0.78 ? '_' : a > 0.45 ? '.' : a > 0.18 ? ',' : null;
+                if (ch !== null) setIfBlank(g, shadowR, SC + sc, ch);
+            }
+        }
     }
 
     function drawVector(g, dr, dc, depth) {
         var steps = Math.round(Math.max(Math.abs(dr), Math.abs(dc)));
         if (steps === 0) { setAt(g, SR, SC, '●'); return; }
-        var bodyCh = depth > 0 ? '·' : '*';
+        // depth > 0 → tip in front (toward viewer): solid line + filled tip
+        // depth < 0 → tip behind: dimmer line + outline tip
+        var inFront = depth >= 0;
+        var bodyCh = inFront ? '*' : ':';
+        var tipCh = inFront ? '●' : 'o';
         for (var i = 1; i < steps; i++) {
             var rr = Math.round(SR + dr * i / steps);
             var cc = Math.round(SC + dc * i / steps);
             setAt(g, rr, cc, bodyCh);
         }
-        setAt(g, Math.round(SR + dr), Math.round(SC + dc), '●');
+        setAt(g, Math.round(SR + dr), Math.round(SC + dc), tipCh);
     }
 
-    var T_CYCLE = 120;
-    var SPIRAL_TURNS = 4;
+    var T_CYCLE = 180;
+    var SPIRAL_TURNS = 5;
     function spiralAt(t) {
         var th = Math.PI * (1 - Math.cos(2 * Math.PI * t / T_CYCLE)) / 2;
         var ph = SPIRAL_TURNS * 2 * Math.PI * t / T_CYCLE;
         var sinT = Math.sin(th);
+        var X = sinT * Math.cos(ph);   // right
+        var Y = sinT * Math.sin(ph);   // depth, + = toward viewer
+        var Z = Math.cos(th);          // up (Bloch Z, qubit axis)
         return {
-            dr: -Math.cos(th) * SRY,
-            dc: sinT * Math.cos(ph) * SRX,
-            depth: sinT * Math.sin(ph)
+            dr: -Z * SRY,
+            dc: X * SRX,
+            depth: Y
         };
     }
 
     function drawTrail(g, t) {
-        for (var k = -6; k < 0; k++) {
+        // 16-step fading trail behind the current tip
+        for (var k = -16; k < 0; k++) {
             var pos = spiralAt(t + k);
             var ch;
-            if (k >= -2) ch = 'o';
-            else if (k >= -4) ch = '+';
-            else ch = '·';
+            if (k >= -3) ch = 'o';
+            else if (k >= -7) ch = '+';
+            else if (k >= -11) ch = '.';
+            else ch = '`';
             setAt(g, Math.round(SR + pos.dr), Math.round(SC + pos.dc), ch);
         }
     }
 
     function noiseChar() {
         var r = Math.random();
-        if (r < 0.45) return '.';
-        if (r < 0.70) return ',';
-        if (r < 0.85) return "'";
-        if (r < 0.93) return '`';
-        if (r < 0.97) return ';';
-        return ':';
+        if (r < 0.50) return '.';
+        if (r < 0.76) return ',';
+        if (r < 0.89) return "'";
+        if (r < 0.96) return '`';
+        return ';';
     }
 
-    function inDiamondZone(r, c) {
-        return r >= DTOP - 1 && r <= DTOP + DH + 1 &&
-               c >= DLEFT - 1 && c <= DLEFT + DW;
-    }
     function inSphereZone(r, c) {
-        return r >= SR - SRY - 2 && r <= SR + SRY + 2 &&
+        return r >= SR - SRY - 2 && r <= SR + SRY + 3 &&
                c >= SC - SRX - 5 && c <= SC + SRX + 5;
     }
 
@@ -230,7 +177,7 @@ title: Home
             if (r === 0 || r === ROWS - 1) continue;
             for (var c = 0; c < COLS; c++) {
                 if (g[r][c] !== ' ') continue;
-                if (inDiamondZone(r, c) || inSphereZone(r, c)) continue;
+                if (inSphereZone(r, c)) continue;
                 if (Math.random() < density) g[r][c] = noiseChar();
             }
         }
@@ -238,14 +185,18 @@ title: Home
 
     function frame(t) {
         var g = blank();
-        drawString(g, 0, 9, '~ D I A M O N D    L A T T I C E ~');
-        drawString(g, 0, 67, '~ B L O C H   S P H E R E  ( s p i r a l ) ~');
-        drawDiamond(g);
-        drawSphere(g);
+        drawString(g, 0, 32,
+            '~ B L O C H   S P H E R E    —    q u b i t   s p i r a l   p r e c e s s i o n ~');
+
+        drawShadedSphere(g);
+
         var pos = spiralAt(t);
         drawTrail(g, t);
         drawVector(g, pos.dr, pos.dc, pos.depth);
-        drawString(g, ROWS - 1, 64, '|ψ⟩ = α|0⟩ + β|1⟩   (precessing)');
+
+        drawString(g, ROWS - 1, 44,
+            '|ψ⟩  =  α |0⟩  +  β |1⟩    (spiraling, lit from upper-left)');
+
         addNoise(g);
         return render(g);
     }
@@ -253,7 +204,7 @@ title: Home
     el.textContent = frame(0);
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var t = 0;
-    setInterval(function () { t = t + 1; el.textContent = frame(t); }, 140);
+    setInterval(function () { t = t + 1; el.textContent = frame(t); }, 110);
 })();
 </script>
 

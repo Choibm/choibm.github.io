@@ -246,8 +246,8 @@ table th, table td {
 /* Hero ASCII animation. */
 .hero-ascii {
     font-family: "Courier New", Courier, monospace;
-    font-size: 10px;
-    line-height: 1.05;
+    font-size: 9px;
+    line-height: 1.0;
     color: #000;
     background: #fff;
     border-top: 1px solid #000;
