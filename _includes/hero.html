@@ -1,55 +1,32 @@
-<section class="hero-container" aria-label="Site introduction">
-    <canvas id="heroCanvas" aria-hidden="true"></canvas>
-    <div class="hero-noise" aria-hidden="true"></div>
-
-    <div class="hero-shell">
-        <div class="hero-copy">
-            <p class="hero-kicker">Quantum · Semiconductor · Materials</p>
-            <h1>Engineering <span class="accent">quantum matter</span> into information.</h1>
-            <div class="hero-rule" aria-hidden="true"></div>
-            <p class="hero-lead">
-                Notes and deep dives on qubits, device physics, and functional materials &mdash;
-                the building blocks shaping the next era of computation.
-            </p>
-
-            <div class="hero-actions">
-                <a class="hero-btn hero-btn-primary" href="{{ '/' | relative_url }}#all">
-                    Read latest posts
-                    <span class="arrow" aria-hidden="true">→</span>
-                </a>
-                <a class="hero-btn hero-btn-ghost" href="{{ '/categories' | relative_url }}">
-                    Browse categories
-                </a>
+<section class="hero" aria-label="Welcome">
+    <div class="container">
+        <div class="hero-inner">
+            <div class="hero-copy">
+                <p class="hero-eyebrow">A personal journal · Est. MMXXVI</p>
+                <h1 class="hero-title">Hello,<br><em>welcome in.</em></h1>
+                <div class="hero-rule" aria-hidden="true"></div>
+                <p class="hero-lead">
+                    A quiet corner of the internet for notes, drafts, and slow ideas &mdash;
+                    written when there's time, kept here when it feels right.
+                </p>
+                <div class="hero-cta">
+                    <a href="{{ '/' | relative_url }}#all" class="btn btn-primary">
+                        Start reading
+                        <span class="btn-arrow" aria-hidden="true">→</span>
+                    </a>
+                    <a href="{{ '/categories' | relative_url }}" class="btn btn-ghost">
+                        Browse all
+                    </a>
+                </div>
             </div>
 
-            <ul class="hero-metrics" aria-label="Research focus areas">
-                <li>
-                    <span class="metric-label">Core</span>
-                    <span class="metric-value">Quantum Information</span>
-                </li>
-                <li>
-                    <span class="metric-label">Applied</span>
-                    <span class="metric-value">Semiconductor Devices</span>
-                </li>
-                <li>
-                    <span class="metric-label">Lens</span>
-                    <span class="metric-value">Advanced Materials</span>
-                </li>
-            </ul>
+            <aside class="hero-edition" aria-hidden="true">
+                <span class="hero-edition-mark">N°&nbsp;01</span>
+                <span class="hero-edition-meta">
+                    Edition
+                    <strong>MMXXVI</strong>
+                </span>
+            </aside>
         </div>
-
-        <aside class="hero-panel" aria-label="Research themes">
-            <div class="hero-panel-head">
-                <p class="hero-panel-title">Research vectors</p>
-                <span class="hero-panel-dot" aria-hidden="true"></span>
-            </div>
-            <ul class="hero-panel-list">
-                <li>Noise-aware quantum architectures</li>
-                <li>Band structure to device performance</li>
-                <li>Defect engineering in functional solids</li>
-            </ul>
-            <p class="hero-panel-equation">State + Structure + Process = Information&nbsp;Hardware</p>
-        </aside>
     </div>
 </section>
-<script src="{{ '/assets/js/hero.js' | relative_url }}"></script>
