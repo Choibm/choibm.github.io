@@ -13,64 +13,76 @@ title: Home
 
     var ROWS = 38, COLS = 128;
 
-    // Brilliant-cut diamond, side view, ~31 rows tall.
-    // Designed to look 3D via inner facet edges (/, \, |, X).
+    // Brilliant-cut diamond outline filled with a 2D diamond-cubic lattice.
+    // Outline (/, \, +, _, V) stays the gem shape; interior shows atoms (C)
+    // bonded by --- (horizontal), | (vertical), \ / (sp3 diagonal) — clipped
+    // to the gem so the cross-section looks like a sliced crystal.
     var LATTICE = (function () {
         var W = 39;
         var pad = function (s) {
             var p = Math.max(0, Math.floor((W - s.length) / 2));
             return ' '.repeat(p) + s + ' '.repeat(W - s.length - p);
         };
+
+        // 2D diamond-cubic projection: 4-row × 4-col tile.
+        // Atoms at rMod=0,cMod=0 and rMod=2,cMod=2 (interior atoms).
+        // Offsets chosen so atoms land symmetrically around col 19 (gem center).
+        function latticeCharAt(r, c) {
+            var rMod = ((r - 1) % 4 + 4) % 4;
+            var cMod = ((c - 3) % 4 + 4) % 4;
+            if (rMod === 0 && cMod === 0) return 'C';
+            if (rMod === 2 && cMod === 2) return 'C';
+            if (rMod === 0) return '-';
+            if (cMod === 0) return '|';
+            if (rMod === 1) {
+                if (cMod === 1) return '\\';
+                if (cMod === 3) return '/';
+            }
+            if (rMod === 3) {
+                if (cMod === 1) return '/';
+                if (cMod === 3) return '\\';
+            }
+            return ' ';
+        }
+
+        function buildRow(gr, leftCh, rightCh, w) {
+            if (w <= 1) return pad(leftCh);
+            var arr = new Array(w);
+            arr[0] = leftCh;
+            arr[w - 1] = rightCh;
+            var startCol = Math.floor((W - w) / 2);
+            for (var c = 1; c < w - 1; c++) {
+                arr[c] = latticeCharAt(gr, startCol + c);
+            }
+            return pad(arr.join(''));
+        }
+
         var rows = [];
+        var gr = 0;
+
         // table top
         rows.push(pad('_____________'));
-        // crown — 12 rows widening 15 → 37, with facet edges
-        var crownFacetCols = function (w) {
-            // pick column offsets for inner | facet edges (relative to row center)
-            return [-2, 2];
-        };
+        gr++;
+        // crown: 12 rows, widths 15..37
         for (var i = 1; i <= 12; i++) {
-            var w = 13 + 2 * i; // 15..37
-            var mid = w >> 1;
-            var arr = new Array(w);
-            arr[0] = '/'; arr[w - 1] = '\\';
-            for (var c = 1; c < w - 1; c++) arr[c] = ':';
-            // inner facet lines
-            arr[mid - 3] = '|';
-            arr[mid + 3] = '|';
-            arr[mid - 1] = '|';
-            arr[mid + 1] = '|';
-            arr[mid] = ':';
-            // mark X vertices at certain rows
-            if (i === 6) { arr[mid - 6] = 'X'; arr[mid + 6] = 'X'; }
-            if (i === 9) { arr[mid - 9] = 'X'; arr[mid + 9] = 'X'; }
-            if (i === 11) { arr[mid - 11] = 'X'; arr[mid + 11] = 'X'; }
-            rows.push(pad(arr.join('')));
+            rows.push(buildRow(gr, '/', '\\', 13 + 2 * i));
+            gr++;
         }
         // girdle (width 39)
         rows.push('+' + '-'.repeat(37) + '+');
-        // upper-girdle band (small)
-        rows.push(pad('\\' + ':'.repeat(35) + '/'));
-        // pavilion — 14 rows narrowing 35 → 9, plus 3 sub-culet rows
-        for (var j = 14; j >= 1; j--) {
-            var pw = 7 + 2 * j; // 9..35
-            var pmid = pw >> 1;
-            var parr = new Array(pw);
-            parr[0] = '\\'; parr[pw - 1] = '/';
-            for (var pc = 1; pc < pw - 1; pc++) parr[pc] = ':';
-            parr[pmid - 3] = '|'; parr[pmid + 3] = '|';
-            parr[pmid - 1] = '|'; parr[pmid + 1] = '|';
-            parr[pmid] = ':';
-            if (j === 13) { parr[pmid - 11] = 'X'; parr[pmid + 11] = 'X'; }
-            if (j === 11) { parr[pmid - 9] = 'X'; parr[pmid + 9] = 'X'; }
-            if (j === 8) { parr[pmid - 6] = 'X'; parr[pmid + 6] = 'X'; }
-            rows.push(pad(parr.join('')));
+        gr++;
+        // pavilion: 12 rows, widths 37..15
+        for (var j = 12; j >= 1; j--) {
+            rows.push(buildRow(gr, '\\', '/', 13 + 2 * j));
+            gr++;
         }
-        // converge to culet
-        rows.push(pad('\\:::::::/'));
-        rows.push(pad('\\:::::/'));
-        rows.push(pad('\\:::/'));
-        rows.push(pad('\\:/'));
+        // sub-pavilion narrowing: 11, 9, 7, 5, 3
+        var subWs = [11, 9, 7, 5, 3];
+        for (var k = 0; k < subWs.length; k++) {
+            rows.push(buildRow(gr, '\\', '/', subWs[k]));
+            gr++;
+        }
+        // culet
         rows.push(pad('V'));
         return rows;
     })();
