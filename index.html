@@ -11,37 +11,76 @@ title: Home
     var el = document.getElementById('hero-ascii');
     if (!el) return;
 
-    var ROWS = 22, COLS = 76;
+    var ROWS = 38, COLS = 128;
 
-    // Brilliant-cut diamond, side view.
-    //   X vertices = 3D facet intersections
-    //   inner /, \, | = upper/lower girdle facet edges
-    var LATTICE = [
-        "       _______       ",
-        "      /\\:::::/\\      ",
-        "     /::\\:::/::\\     ",
-        "    /::::\\:/::::\\    ",
-        "   /::::::X::::::\\   ",
-        "  /::::::/|\\::::::\\  ",
-        " /::::::/:|:\\::::::\\ ",
-        "+------+--+--+------+",
-        " \\::::::\\:|:/::::::/ ",
-        "  \\::::::\\|/::::::/  ",
-        "   \\::::::X::::::/   ",
-        "    \\::::/:\\::::/    ",
-        "     \\::/:::\\::/     ",
-        "      \\/:::::\\/      ",
-        "       \\:::::/       ",
-        "        \\:::/        ",
-        "         \\:/         ",
-        "          V          "
-    ];
+    // Brilliant-cut diamond, side view, ~31 rows tall.
+    // Designed to look 3D via inner facet edges (/, \, |, X).
+    var LATTICE = (function () {
+        var W = 39;
+        var pad = function (s) {
+            var p = Math.max(0, Math.floor((W - s.length) / 2));
+            return ' '.repeat(p) + s + ' '.repeat(W - s.length - p);
+        };
+        var rows = [];
+        // table top
+        rows.push(pad('_____________'));
+        // crown — 12 rows widening 15 → 37, with facet edges
+        var crownFacetCols = function (w) {
+            // pick column offsets for inner | facet edges (relative to row center)
+            return [-2, 2];
+        };
+        for (var i = 1; i <= 12; i++) {
+            var w = 13 + 2 * i; // 15..37
+            var mid = w >> 1;
+            var arr = new Array(w);
+            arr[0] = '/'; arr[w - 1] = '\\';
+            for (var c = 1; c < w - 1; c++) arr[c] = ':';
+            // inner facet lines
+            arr[mid - 3] = '|';
+            arr[mid + 3] = '|';
+            arr[mid - 1] = '|';
+            arr[mid + 1] = '|';
+            arr[mid] = ':';
+            // mark X vertices at certain rows
+            if (i === 6) { arr[mid - 6] = 'X'; arr[mid + 6] = 'X'; }
+            if (i === 9) { arr[mid - 9] = 'X'; arr[mid + 9] = 'X'; }
+            if (i === 11) { arr[mid - 11] = 'X'; arr[mid + 11] = 'X'; }
+            rows.push(pad(arr.join('')));
+        }
+        // girdle (width 39)
+        rows.push('+' + '-'.repeat(37) + '+');
+        // upper-girdle band (small)
+        rows.push(pad('\\' + ':'.repeat(35) + '/'));
+        // pavilion — 14 rows narrowing 35 → 9, plus 3 sub-culet rows
+        for (var j = 14; j >= 1; j--) {
+            var pw = 7 + 2 * j; // 9..35
+            var pmid = pw >> 1;
+            var parr = new Array(pw);
+            parr[0] = '\\'; parr[pw - 1] = '/';
+            for (var pc = 1; pc < pw - 1; pc++) parr[pc] = ':';
+            parr[pmid - 3] = '|'; parr[pmid + 3] = '|';
+            parr[pmid - 1] = '|'; parr[pmid + 1] = '|';
+            parr[pmid] = ':';
+            if (j === 13) { parr[pmid - 11] = 'X'; parr[pmid + 11] = 'X'; }
+            if (j === 11) { parr[pmid - 9] = 'X'; parr[pmid + 9] = 'X'; }
+            if (j === 8) { parr[pmid - 6] = 'X'; parr[pmid + 6] = 'X'; }
+            rows.push(pad(parr.join('')));
+        }
+        // converge to culet
+        rows.push(pad('\\:::::::/'));
+        rows.push(pad('\\:::::/'));
+        rows.push(pad('\\:::/'));
+        rows.push(pad('\\:/'));
+        rows.push(pad('V'));
+        return rows;
+    })();
+
     var DTOP = 2, DLEFT = 3;
-    var DW = LATTICE[0].length;   // 21
-    var DH = LATTICE.length;      // 18
+    var DW = LATTICE[0].length;
+    var DH = LATTICE.length;
 
-    // Bloch sphere geometry.
-    var SR = 11, SC = 54, SRX = 14, SRY = 7;
+    // Bigger Bloch sphere.
+    var SR = 17, SC = 90, SRX = 26, SRY = 13;
 
     function blank() {
         var g = [];
@@ -70,37 +109,44 @@ title: Home
         for (var i = 0; i < DH; i++) {
             drawString(g, DTOP + i, DLEFT, LATTICE[i]);
         }
-        drawString(g, DTOP + DH + 1, DLEFT + 3, 'diamond (sp3 C)');
+        drawString(g, DTOP + DH + 1, DLEFT + 8, 'diamond  (sp3 C)');
     }
 
     function drawSphere(g) {
-        // outline
-        for (var theta = 0; theta < Math.PI * 2; theta += 0.025) {
+        // outline (denser)
+        for (var theta = 0; theta < Math.PI * 2; theta += 0.015) {
             var r = Math.round(SR - SRY * Math.sin(theta));
             var c = Math.round(SC + SRX * Math.cos(theta));
             setAt(g, r, c, '.');
         }
-        // visible equator (front)
-        for (var phi = 0; phi <= Math.PI; phi += 0.04) {
-            var rE = Math.round(SR + 2 * Math.sin(phi));
-            var cE = Math.round(SC + SRX * Math.cos(phi));
-            setAt(g, rE, cE, '.');
+        // multiple latitude lines (tilted ellipses)
+        var lats = [-0.7, -0.35, 0, 0.35, 0.7];
+        for (var li = 0; li < lats.length; li++) {
+            var zVal = lats[li];
+            var radiusScale = Math.sqrt(1 - zVal * zVal);
+            var rowOff = -SRY * zVal;
+            // front half visible
+            for (var ph = 0; ph <= Math.PI; ph += 0.04) {
+                var rL = Math.round(SR + rowOff + 2.2 * Math.sin(ph) * radiusScale);
+                var cL = Math.round(SC + SRX * radiusScale * Math.cos(ph));
+                setIfBlank(g, rL, cL, '.');
+            }
+            // back half dashed
+            for (var ph2 = Math.PI; ph2 < Math.PI * 2; ph2 += 0.18) {
+                var rL2 = Math.round(SR + rowOff + 2.2 * Math.sin(ph2) * radiusScale);
+                var cL2 = Math.round(SC + SRX * radiusScale * Math.cos(ph2));
+                setIfBlank(g, rL2, cL2, ',');
+            }
         }
-        // hidden equator (back) dashed
-        for (var phi2 = Math.PI; phi2 < Math.PI * 2; phi2 += 0.22) {
-            var rE2 = Math.round(SR + 2 * Math.sin(phi2));
-            var cE2 = Math.round(SC + SRX * Math.cos(phi2));
-            setAt(g, rE2, cE2, '.');
-        }
-        // a meridian
-        for (var psi = 0.08; psi <= Math.PI - 0.08; psi += 0.05) {
-            var rM = Math.round(SR - SRY * Math.cos(psi));
-            var cM = Math.round(SC + (SRX * 0.18) * Math.sin(psi));
-            setIfBlank(g, rM, cM, ':');
-        }
-        // vertical axis
-        for (var ra = SR - SRY + 1; ra <= SR + SRY - 1; ra++) {
-            setIfBlank(g, ra, SC, '|');
+        // multiple meridians
+        var meridians = [-0.6, -0.3, 0, 0.3, 0.6];
+        for (var mi = 0; mi < meridians.length; mi++) {
+            var mTilt = meridians[mi];
+            for (var ps = 0.04; ps <= Math.PI - 0.04; ps += 0.03) {
+                var rM = Math.round(SR - SRY * Math.cos(ps));
+                var cM = Math.round(SC + (SRX * mTilt) * Math.sin(ps));
+                setIfBlank(g, rM, cM, mi === 2 ? '|' : ':');
+            }
         }
         // center
         setAt(g, SR, SC, '+');
@@ -111,8 +157,6 @@ title: Home
         drawString(g, SR, SC - SRX - 4, '|-⟩');
     }
 
-    // depth > 0 → tip is BEHIND the sphere, line dashed
-    // depth < 0 → tip is in FRONT, line solid
     function drawVector(g, dr, dc, depth) {
         var steps = Math.round(Math.max(Math.abs(dr), Math.abs(dc)));
         if (steps === 0) { setAt(g, SR, SC, '●'); return; }
@@ -125,36 +169,38 @@ title: Home
         setAt(g, Math.round(SR + dr), Math.round(SC + dc), '●');
     }
 
-    // Short fading trail behind the current spiral tip.
-    function drawTrail(g, t, advance) {
-        for (var k = -3; k < 0; k++) {
-            var tk = t + k;
-            var pos = spiralAt(tk);
-            var ch = k === -1 ? 'o' : (k === -2 ? '+' : '·');
-            setAt(g, Math.round(SR + pos.dr), Math.round(SC + pos.dc), ch);
-        }
-    }
-
-    var T_CYCLE = 72;          // frames per full spiral cycle
-    var SPIRAL_TURNS = 3;      // turns per cycle (latitude oscillates 0→π→0)
+    var T_CYCLE = 120;
+    var SPIRAL_TURNS = 4;
     function spiralAt(t) {
         var th = Math.PI * (1 - Math.cos(2 * Math.PI * t / T_CYCLE)) / 2;
         var ph = SPIRAL_TURNS * 2 * Math.PI * t / T_CYCLE;
         var sinT = Math.sin(th);
-        var x = sinT * Math.cos(ph);
-        var y = sinT * Math.sin(ph);   // depth (positive = behind)
-        var z = Math.cos(th);
-        return { dr: -z * SRY, dc: x * SRX, depth: y };
+        return {
+            dr: -Math.cos(th) * SRY,
+            dc: sinT * Math.cos(ph) * SRX,
+            depth: sinT * Math.sin(ph)
+        };
     }
 
-    // weighted noise: mostly dots, occasional commas/quotes
+    function drawTrail(g, t) {
+        for (var k = -6; k < 0; k++) {
+            var pos = spiralAt(t + k);
+            var ch;
+            if (k >= -2) ch = 'o';
+            else if (k >= -4) ch = '+';
+            else ch = '·';
+            setAt(g, Math.round(SR + pos.dr), Math.round(SC + pos.dc), ch);
+        }
+    }
+
     function noiseChar() {
         var r = Math.random();
-        if (r < 0.55) return '.';
-        if (r < 0.80) return ',';
-        if (r < 0.92) return "'";
-        if (r < 0.98) return '`';
-        return ';';
+        if (r < 0.45) return '.';
+        if (r < 0.70) return ',';
+        if (r < 0.85) return "'";
+        if (r < 0.93) return '`';
+        if (r < 0.97) return ';';
+        return ':';
     }
 
     function inDiamondZone(r, c) {
@@ -162,12 +208,12 @@ title: Home
                c >= DLEFT - 1 && c <= DLEFT + DW;
     }
     function inSphereZone(r, c) {
-        return r >= SR - SRY - 1 && r <= SR + SRY + 1 &&
-               c >= SC - SRX - 4 && c <= SC + SRX + 4;
+        return r >= SR - SRY - 2 && r <= SR + SRY + 2 &&
+               c >= SC - SRX - 5 && c <= SC + SRX + 5;
     }
 
     function addNoise(g) {
-        var density = 0.05;
+        var density = 0.07;
         for (var r = 0; r < ROWS; r++) {
             if (r === 0 || r === ROWS - 1) continue;
             for (var c = 0; c < COLS; c++) {
@@ -180,17 +226,14 @@ title: Home
 
     function frame(t) {
         var g = blank();
-        drawString(g, 0, 5, '~ D I A M O N D ~');
-        drawString(g, 0, 40, '~ B L O C H   S P H E R E ~');
+        drawString(g, 0, 9, '~ D I A M O N D    L A T T I C E ~');
+        drawString(g, 0, 67, '~ B L O C H   S P H E R E  ( s p i r a l ) ~');
         drawDiamond(g);
         drawSphere(g);
-
-        // spiral path: latitude oscillates while longitude rotates
         var pos = spiralAt(t);
         drawTrail(g, t);
         drawVector(g, pos.dr, pos.dc, pos.depth);
-
-        drawString(g, ROWS - 1, 38, '|ψ⟩ spirals on Bloch sphere');
+        drawString(g, ROWS - 1, 64, '|ψ⟩ = α|0⟩ + β|1⟩   (precessing)');
         addNoise(g);
         return render(g);
     }
@@ -198,7 +241,7 @@ title: Home
     el.textContent = frame(0);
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var t = 0;
-    setInterval(function () { t = t + 1; el.textContent = frame(t); }, 150);
+    setInterval(function () { t = t + 1; el.textContent = frame(t); }, 140);
 })();
 </script>
 
