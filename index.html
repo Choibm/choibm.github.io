@@ -16,11 +16,14 @@ title: Home
     // Sphere geometry — 2:1 SRX:SRY for round look in monospace.
     var SR = 21, SC = 66, SRX = 38, SRY = 19;
 
-    // Lean LEFT only (rotation around the Y axis / depth axis).
-    // No vertical (X-axis) pitch — equator stays in the screen plane.
-    // Negative angle → top pole tips toward upper-left, bottom toward lower-right.
-    var TILT_Y = -0.38;
+    // Two-axis tilt:
+    //   TILT_Y (rotate around the depth axis) — lean LEFT, top pole goes upper-left
+    //   TILT_X (rotate around the horizontal axis) — tip the TOP toward the viewer
+    //     so latitudes/equator open up as ellipses instead of collapsing to lines.
+    var TILT_Y = -0.34;   // ~ -19°  left lean
+    var TILT_X = 0.28;    // ~  16°  forward tilt (top tips toward viewer)
     var CY = Math.cos(TILT_Y), SY = Math.sin(TILT_Y);
+    var CX = Math.cos(TILT_X), SX = Math.sin(TILT_X);
 
     function blank() {
         var g = [];
@@ -46,17 +49,22 @@ title: Home
     }
 
     // Project 3D Bloch coords (X right, Y depth-toward-viewer, Z up) → screen.
-    // Rotate around Y axis (axis going into the screen) by TILT_Y.
-    //   X' =  X·cos + Z·sin
-    //   Y' =  Y          (unchanged — Y is the rotation axis)
-    //   Z' = -X·sin + Z·cos
+    // 1. Rotate around Y axis (left lean)
+    // 2. Rotate around X axis (top tips toward viewer)
+    // 3. Orthographic project to (sx, sy); keep Y component as depth.
     function project(X, Y, Z) {
+        // step 1: Y-axis rotation
         var X1 = X * CY + Z * SY;
+        var Y1 = Y;
         var Z1 = -X * SY + Z * CY;
+        // step 2: X-axis rotation
+        var X2 = X1;
+        var Y2 = Y1 * CX + Z1 * SX;
+        var Z2 = -Y1 * SX + Z1 * CX;
         return {
-            sx: SC + X1 * SRX,
-            sy: SR - Z1 * SRY,
-            depth: Y
+            sx: SC + X2 * SRX,
+            sy: SR - Z2 * SRY,
+            depth: Y2
         };
     }
 
