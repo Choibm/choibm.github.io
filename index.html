@@ -16,10 +16,13 @@ title: Home
     // Sphere geometry — 2:1 SRX:SRY for round look in monospace.
     var SR = 21, SC = 66, SRX = 38, SRY = 19;
 
-    // Slight tilt around the X axis so latitudes/equator read as ellipses
-    // rather than flat horizontal lines.  ~18° tilt.
-    var TILT = 0.32;
-    var COS_T = Math.cos(TILT), SIN_T = Math.sin(TILT);
+    // Two-axis tilt for an asymmetric, natural perspective.
+    //   TILT_X: look down ~18°  (Z axis tips slightly toward viewer)
+    //   TILT_Z: yaw left ~-15°  (sphere rotates so the LEFT side leans out)
+    var TILT_X = 0.32;
+    var TILT_Z = -0.26;
+    var CX = Math.cos(TILT_X), SX = Math.sin(TILT_X);
+    var CZ = Math.cos(TILT_Z), SZ = Math.sin(TILT_Z);
 
     function blank() {
         var g = [];
@@ -45,13 +48,19 @@ title: Home
     }
 
     // Project 3D Bloch coords (X right, Y depth-toward-viewer, Z up) → screen.
+    // First yaw around Z, then pitch around X, then orthographic project.
     function project(X, Y, Z) {
-        var nY = Y * COS_T + Z * SIN_T;   // depth after tilt
-        var nZ = -Y * SIN_T + Z * COS_T;  // up after tilt
+        // 1. yaw around Z axis
+        var X1 = X * CZ - Y * SZ;
+        var Y1 = X * SZ + Y * CZ;
+        // Z unchanged
+        // 2. pitch around X axis
+        var Y2 = Y1 * CX + Z * SX;
+        var Z2 = -Y1 * SX + Z * CX;
         return {
-            sx: SC + X * SRX,
-            sy: SR - nZ * SRY,
-            depth: nY
+            sx: SC + X1 * SRX,
+            sy: SR - Z2 * SRY,
+            depth: Y2
         };
     }
 
@@ -143,23 +152,24 @@ title: Home
         // 8. Center pivot
         setAt(g, SR, SC, '+');
 
-        // Labels
-        drawString(g, SR - SRY - 1, SC - 1, '|0⟩');
-        drawString(g, SR + SRY + 1, SC - 1, '|1⟩');
-        drawString(g, SR, SC + SRX + 2, '|+⟩');
-        drawString(g, SR, SC - SRX - 4, '|-⟩');
+        // Labels — placed at projected positions so they follow the rotation
+        // instead of sitting symmetrically around the silhouette.
+        function placeLabel(X, Y, Z, dx, dy, label) {
+            var p = project(X, Y, Z);
+            drawString(g, Math.round(p.sy) + dy, Math.round(p.sx) + dx, label);
+        }
+        placeLabel(0, 0, 1, -1, -1, '|0⟩');
+        placeLabel(0, 0, -1, -1, 1, '|1⟩');
+        placeLabel(1, 0, 0, 2, 0, '|+⟩');
+        placeLabel(-1, 0, 0, -4, 0, '|-⟩');
+        placeLabel(0, 1, 0, 2, 0, '|+i⟩');
+        placeLabel(0, -1, 0, -5, 0, '|-i⟩');
 
-        // |+i⟩ / |-i⟩ labels along the Y axis
-        var pYf = project(0, 1, 0);
-        drawString(g, Math.round(pYf.sy), Math.round(pYf.sx) + 2, '|+i⟩');
-        var pYb = project(0, -1, 0);
-        drawString(g, Math.round(pYb.sy), Math.round(pYb.sx) - 5, '|-i⟩');
-
-        // small axis legend at top-left, like a coordinate gizmo
+        // small axis legend at top-left (arrows reflect the new tilt)
         drawString(g, 1, 2, 'axes:');
         drawString(g, 2, 2, ' Z ↑');
-        drawString(g, 3, 2, ' X →');
-        drawString(g, 4, 2, ' Y ⊙ (out)');
+        drawString(g, 3, 2, ' X ↘');
+        drawString(g, 4, 2, ' Y ↙ (out)');
     }
 
     function drawVector(g, X, Y, Z) {
