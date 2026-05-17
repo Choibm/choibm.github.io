@@ -4,7 +4,7 @@ title: Home
 ---
 
 <pre class="hero-ascii" id="hero-ascii" aria-hidden="true">loading...</pre>
-<p class="hero-ascii-caption">Fig. &mdash; a qubit spiraling on a Lambert-shaded Bloch sphere.</p>
+<p class="hero-ascii-caption">Fig. &mdash; wireframe Bloch sphere with X/Y/Z axes; qubit spiraling on the surface.</p>
 
 <script>
 (function () {
@@ -13,17 +13,13 @@ title: Home
 
     var ROWS = 44, COLS = 132;
 
-    // Bloch sphere geometry — SRX:SRY ≈ 2:1 so the disk reads as round
-    // in a monospace grid (chars are roughly twice as tall as wide).
+    // Sphere geometry — 2:1 SRX:SRY for round look in monospace.
     var SR = 21, SC = 66, SRX = 38, SRY = 19;
 
-    // Brightness palette: lit → shadow on white page (sparse → dense ink).
-    var PAL = ".`'\",:;-~=+itosfXa#bk@$M";
-    var PAL_LEN = PAL.length;
-
-    // Light direction (sphere coords): X = right, Y = up (screen), Z = viewer.
-    // Light from upper-left + slightly toward viewer.
-    var LX = -0.45, LY = 0.50, LZ = 0.74;
+    // Slight tilt around the X axis so latitudes/equator read as ellipses
+    // rather than flat horizontal lines.  ~18° tilt.
+    var TILT = 0.32;
+    var COS_T = Math.cos(TILT), SIN_T = Math.sin(TILT);
 
     function blank() {
         var g = [];
@@ -48,76 +44,131 @@ title: Home
         return g.map(function (row) { return row.join(''); }).join('\n');
     }
 
-    function drawShadedSphere(g) {
-        var rMin = SR - SRY - 1, rMax = SR + SRY + 1;
-        var cMin = SC - SRX - 1, cMax = SC + SRX + 1;
-        for (var r = rMin; r <= rMax; r++) {
-            for (var c = cMin; c <= cMax; c++) {
-                if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
-                var nx = (c - SC) / SRX;       // screen normalized x
-                var ny = (r - SR) / SRY;       // screen normalized y (down +)
-                var rho2 = nx * nx + ny * ny;
-                if (rho2 > 1) continue;
+    // Project 3D Bloch coords (X right, Y depth-toward-viewer, Z up) → screen.
+    function project(X, Y, Z) {
+        var nY = Y * COS_T + Z * SIN_T;   // depth after tilt
+        var nZ = -Y * SIN_T + Z * COS_T;  // up after tilt
+        return {
+            sx: SC + X * SRX,
+            sy: SR - nZ * SRY,
+            depth: nY
+        };
+    }
 
-                var X = nx;                     // right
-                var Y = -ny;                    // up
-                var Z = Math.sqrt(1 - rho2);    // toward viewer
+    // Draw a great circle defined by its plane normal (unit vector).
+    function drawGreatCircle(g, normal, frontCh, backCh) {
+        var ax = normal[0], ay = normal[1], az = normal[2];
+        // basis vector 1 in the plane perpendicular to normal
+        var bx, by, bz;
+        if (Math.abs(az) < 0.95) {
+            bx = ay; by = -ax; bz = 0;
+        } else {
+            bx = -az; by = 0; bz = ax;
+        }
+        var L = Math.sqrt(bx * bx + by * by + bz * bz);
+        bx /= L; by /= L; bz /= L;
+        // basis vector 2 = normal × basis1
+        var cx = ay * bz - az * by;
+        var cy = az * bx - ax * bz;
+        var cz = ax * by - ay * bx;
 
-                // Lambertian diffuse
-                var b = X * LX + Y * LY + Z * LZ;
-                // Specular highlight
-                var spec = Math.max(0, b);
-                spec = Math.pow(spec, 28) * 0.55;
-                b = b + spec;
-                b = Math.max(0, Math.min(1, b));
+        // back pass
+        for (var t = 0; t < 2 * Math.PI; t += 0.010) {
+            var ct = Math.cos(t), st = Math.sin(t);
+            var p = project(bx * ct + cx * st, by * ct + cy * st, bz * ct + cz * st);
+            if (p.depth < 0) setAt(g, Math.round(p.sy), Math.round(p.sx), backCh);
+        }
+        // front pass overwrites
+        for (var t2 = 0; t2 < 2 * Math.PI; t2 += 0.010) {
+            var ct2 = Math.cos(t2), st2 = Math.sin(t2);
+            var p2 = project(bx * ct2 + cx * st2, by * ct2 + cy * st2, bz * ct2 + cz * st2);
+            if (p2.depth >= 0) setAt(g, Math.round(p2.sy), Math.round(p2.sx), frontCh);
+        }
+    }
 
-                var idx = Math.floor((1 - b) * (PAL_LEN - 1) + 0.5);
-                if (idx < 0) idx = 0;
-                if (idx >= PAL_LEN) idx = PAL_LEN - 1;
-                setAt(g, r, c, PAL.charAt(idx));
-            }
+    // Latitude circle (parallel) at given Bloch-Z value.
+    function drawLatitude(g, zVal, frontCh, backCh) {
+        var rad = Math.sqrt(1 - zVal * zVal);
+        for (var t = 0; t < 2 * Math.PI; t += 0.012) {
+            var p = project(rad * Math.cos(t), rad * Math.sin(t), zVal);
+            if (p.depth < 0) setAt(g, Math.round(p.sy), Math.round(p.sx), backCh);
+        }
+        for (var t2 = 0; t2 < 2 * Math.PI; t2 += 0.012) {
+            var p2 = project(rad * Math.cos(t2), rad * Math.sin(t2), zVal);
+            if (p2.depth >= 0) setAt(g, Math.round(p2.sy), Math.round(p2.sx), frontCh);
+        }
+    }
+
+    function drawSphereWireframe(g) {
+        // 1. Silhouette (outline of visible disk)
+        for (var th = 0; th < 2 * Math.PI; th += 0.006) {
+            setAt(g,
+                Math.round(SR - Math.sin(th) * SRY),
+                Math.round(SC + Math.cos(th) * SRX), '.');
         }
 
-        // Front equator overlay (Bloch X-Y plane, Z=0). Visible at screen row SR.
-        for (var et = 0.05; et < Math.PI - 0.05; et += 0.02) {
-            var ce = Math.round(SC + Math.cos(et) * SRX);
-            if (g[SR] && g[SR][ce] !== undefined && g[SR][ce] !== ' ') {
-                g[SR][ce] = '-';
-            }
+        // 2. Equator (Z = 0) — tilted ellipse, front '=', back '.'
+        drawLatitude(g, 0, '=', '.');
+
+        // 3. Parallels at z = ±0.5 and ±0.85
+        drawLatitude(g, 0.85, '~', '.');
+        drawLatitude(g, 0.5, '~', '.');
+        drawLatitude(g, -0.5, '~', '.');
+        drawLatitude(g, -0.85, '~', '.');
+
+        // 4. Meridians at φ = π/4 and φ = 3π/4 (front-diagonal great circles)
+        drawGreatCircle(g, [-0.7071, 0.7071, 0], '+', ':');
+        drawGreatCircle(g, [0.7071, 0.7071, 0], '+', ':');
+        // and φ = 0 (X-Z plane, near-silhouette) and φ = π/2 (Y-Z plane, vertical line)
+        drawGreatCircle(g, [0, 1, 0], '+', ':');
+
+        // 5. Z axis — pole-to-pole vertical line through center
+        for (var s = -1.0; s <= 1.0001; s += 0.03) {
+            var pz = project(0, 0, s);
+            setAt(g, Math.round(pz.sy), Math.round(pz.sx), '|');
         }
-        // Polar (Z) axis — vertical line through center.
-        for (var rz = SR - SRY + 1; rz <= SR + SRY - 1; rz++) {
-            if (rz === SR) continue;
-            if (g[rz] && g[rz][SC] !== ' ') g[rz][SC] = '|';
+        // 6. X axis — horizontal line at center
+        for (var sx = -1.0; sx <= 1.0001; sx += 0.025) {
+            var px = project(sx, 0, 0);
+            setAt(g, Math.round(px.sy), Math.round(px.sx), '-');
         }
-        // Center pivot
+        // 7. Y axis — depth indicator, short line through center
+        for (var sy = -1.0; sy <= 1.0001; sy += 0.04) {
+            var py = project(0, sy, 0);
+            var rr = Math.round(py.sy), cc = Math.round(py.sx);
+            if (py.depth >= 0) setAt(g, rr, cc, '#');
+            else setIfBlank(g, rr, cc, ',');
+        }
+
+        // 8. Center pivot
         setAt(g, SR, SC, '+');
 
-        // Pole / cardinal labels
+        // Labels
         drawString(g, SR - SRY - 1, SC - 1, '|0⟩');
         drawString(g, SR + SRY + 1, SC - 1, '|1⟩');
         drawString(g, SR, SC + SRX + 2, '|+⟩');
         drawString(g, SR, SC - SRX - 4, '|-⟩');
 
-        // Soft cast shadow on the "floor" just below the sphere.
-        var shadowR = SR + SRY + 2;
-        if (shadowR < ROWS - 1) {
-            var halfW = SRX;
-            for (var sc = -halfW; sc <= halfW; sc++) {
-                var u = sc / halfW;
-                var a = 1 - u * u;
-                var ch = a > 0.78 ? '_' : a > 0.45 ? '.' : a > 0.18 ? ',' : null;
-                if (ch !== null) setIfBlank(g, shadowR, SC + sc, ch);
-            }
-        }
+        // |+i⟩ / |-i⟩ labels along the Y axis
+        var pYf = project(0, 1, 0);
+        drawString(g, Math.round(pYf.sy), Math.round(pYf.sx) + 2, '|+i⟩');
+        var pYb = project(0, -1, 0);
+        drawString(g, Math.round(pYb.sy), Math.round(pYb.sx) - 5, '|-i⟩');
+
+        // small axis legend at top-left, like a coordinate gizmo
+        drawString(g, 1, 2, 'axes:');
+        drawString(g, 2, 2, ' Z ↑');
+        drawString(g, 3, 2, ' X →');
+        drawString(g, 4, 2, ' Y ⊙ (out)');
     }
 
-    function drawVector(g, dr, dc, depth) {
+    function drawVector(g, X, Y, Z) {
+        var p = project(X, Y, Z);
+        var dr = p.sy - SR;
+        var dc = p.sx - SC;
         var steps = Math.round(Math.max(Math.abs(dr), Math.abs(dc)));
         if (steps === 0) { setAt(g, SR, SC, '●'); return; }
-        // depth > 0 → tip in front (toward viewer): solid line + filled tip
-        // depth < 0 → tip behind: dimmer line + outline tip
-        var inFront = depth >= 0;
+        var inFront = p.depth >= 0;
         var bodyCh = inFront ? '*' : ':';
         var tipCh = inFront ? '●' : 'o';
         for (var i = 1; i < steps; i++) {
@@ -125,7 +176,7 @@ title: Home
             var cc = Math.round(SC + dc * i / steps);
             setAt(g, rr, cc, bodyCh);
         }
-        setAt(g, Math.round(SR + dr), Math.round(SC + dc), tipCh);
+        setAt(g, Math.round(p.sy), Math.round(p.sx), tipCh);
     }
 
     var T_CYCLE = 180;
@@ -134,33 +185,30 @@ title: Home
         var th = Math.PI * (1 - Math.cos(2 * Math.PI * t / T_CYCLE)) / 2;
         var ph = SPIRAL_TURNS * 2 * Math.PI * t / T_CYCLE;
         var sinT = Math.sin(th);
-        var X = sinT * Math.cos(ph);   // right
-        var Y = sinT * Math.sin(ph);   // depth, + = toward viewer
-        var Z = Math.cos(th);          // up (Bloch Z, qubit axis)
         return {
-            dr: -Z * SRY,
-            dc: X * SRX,
-            depth: Y
+            X: sinT * Math.cos(ph),
+            Y: sinT * Math.sin(ph),
+            Z: Math.cos(th)
         };
     }
 
     function drawTrail(g, t) {
-        // 16-step fading trail behind the current tip
         for (var k = -16; k < 0; k++) {
             var pos = spiralAt(t + k);
+            var p = project(pos.X, pos.Y, pos.Z);
             var ch;
             if (k >= -3) ch = 'o';
             else if (k >= -7) ch = '+';
             else if (k >= -11) ch = '.';
             else ch = '`';
-            setAt(g, Math.round(SR + pos.dr), Math.round(SC + pos.dc), ch);
+            setAt(g, Math.round(p.sy), Math.round(p.sx), ch);
         }
     }
 
     function noiseChar() {
         var r = Math.random();
         if (r < 0.50) return '.';
-        if (r < 0.76) return ',';
+        if (r < 0.75) return ',';
         if (r < 0.89) return "'";
         if (r < 0.96) return '`';
         return ';';
@@ -185,17 +233,18 @@ title: Home
 
     function frame(t) {
         var g = blank();
-        drawString(g, 0, 32,
-            '~ B L O C H   S P H E R E    —    q u b i t   s p i r a l   p r e c e s s i o n ~');
 
-        drawShadedSphere(g);
+        drawString(g, 0, 26,
+            '~ B L O C H   S P H E R E    —    q u b i t   s p i r a l   o n   c o o r d i n a t e   f r a m e ~');
+
+        drawSphereWireframe(g);
 
         var pos = spiralAt(t);
         drawTrail(g, t);
-        drawVector(g, pos.dr, pos.dc, pos.depth);
+        drawVector(g, pos.X, pos.Y, pos.Z);
 
-        drawString(g, ROWS - 1, 44,
-            '|ψ⟩  =  α |0⟩  +  β |1⟩    (spiraling, lit from upper-left)');
+        drawString(g, ROWS - 1, 42,
+            '|ψ⟩  =  α |0⟩  +  β |1⟩    (X right · Y out · Z up)');
 
         addNoise(g);
         return render(g);
