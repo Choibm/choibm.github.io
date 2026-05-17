@@ -16,13 +16,11 @@ title: Home
     // Sphere geometry — 2:1 SRX:SRY for round look in monospace.
     var SR = 21, SC = 66, SRX = 38, SRY = 19;
 
-    // Two-axis tilt for an asymmetric, natural perspective.
-    //   TILT_X: look down ~18°  (Z axis tips slightly toward viewer)
-    //   TILT_Z: yaw left ~-15°  (sphere rotates so the LEFT side leans out)
-    var TILT_X = 0.32;
-    var TILT_Z = -0.26;
-    var CX = Math.cos(TILT_X), SX = Math.sin(TILT_X);
-    var CZ = Math.cos(TILT_Z), SZ = Math.sin(TILT_Z);
+    // Lean LEFT only (rotation around the Y axis / depth axis).
+    // No vertical (X-axis) pitch — equator stays in the screen plane.
+    // Negative angle → top pole tips toward upper-left, bottom toward lower-right.
+    var TILT_Y = -0.38;
+    var CY = Math.cos(TILT_Y), SY = Math.sin(TILT_Y);
 
     function blank() {
         var g = [];
@@ -48,19 +46,17 @@ title: Home
     }
 
     // Project 3D Bloch coords (X right, Y depth-toward-viewer, Z up) → screen.
-    // First yaw around Z, then pitch around X, then orthographic project.
+    // Rotate around Y axis (axis going into the screen) by TILT_Y.
+    //   X' =  X·cos + Z·sin
+    //   Y' =  Y          (unchanged — Y is the rotation axis)
+    //   Z' = -X·sin + Z·cos
     function project(X, Y, Z) {
-        // 1. yaw around Z axis
-        var X1 = X * CZ - Y * SZ;
-        var Y1 = X * SZ + Y * CZ;
-        // Z unchanged
-        // 2. pitch around X axis
-        var Y2 = Y1 * CX + Z * SX;
-        var Z2 = -Y1 * SX + Z * CX;
+        var X1 = X * CY + Z * SY;
+        var Z1 = -X * SY + Z * CY;
         return {
             sx: SC + X1 * SRX,
-            sy: SR - Z2 * SRY,
-            depth: Y2
+            sy: SR - Z1 * SRY,
+            depth: Y
         };
     }
 
@@ -165,11 +161,11 @@ title: Home
         placeLabel(0, 1, 0, 2, 0, '|+i⟩');
         placeLabel(0, -1, 0, -5, 0, '|-i⟩');
 
-        // small axis legend at top-left (arrows reflect the new tilt)
+        // small axis legend at top-left (arrows reflect the leaning-left tilt)
         drawString(g, 1, 2, 'axes:');
-        drawString(g, 2, 2, ' Z ↑');
-        drawString(g, 3, 2, ' X ↘');
-        drawString(g, 4, 2, ' Y ↙ (out)');
+        drawString(g, 2, 2, ' Z ↖');
+        drawString(g, 3, 2, ' X ↗');
+        drawString(g, 4, 2, ' Y ⊙ (out of page)');
     }
 
     function drawVector(g, X, Y, Z) {
