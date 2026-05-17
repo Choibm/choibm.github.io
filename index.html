@@ -135,23 +135,45 @@ title: Home
         // and φ = 0 (X-Z plane, near-silhouette) and φ = π/2 (Y-Z plane, vertical line)
         drawGreatCircle(g, [0, 1, 0], '+', ':');
 
-        // 5. Z axis — pole-to-pole vertical line through center
-        for (var s = -1.0; s <= 1.0001; s += 0.03) {
-            var pz = project(0, 0, s);
-            setAt(g, Math.round(pz.sy), Math.round(pz.sx), '|');
+        // 5/6/7. Coordinate axes — extended beyond the sphere with bolder
+        // chars on the outside so they read clearly as axes.
+        function drawAxis(dir, innerCh, outerCh, EXT, posLabel, posDx, posDy,
+                                                       negLabel, negDx, negDy) {
+            for (var s = -EXT; s <= EXT + 0.001; s += 0.020) {
+                var p = project(dir[0] * s, dir[1] * s, dir[2] * s);
+                var rr = Math.round(p.sy), cc = Math.round(p.sx);
+                if (rr < 0 || rr >= ROWS || cc < 0 || cc >= COLS) continue;
+                var outside = Math.abs(s) > 1.0;
+                if (outside) {
+                    setAt(g, rr, cc, outerCh);
+                } else if (dir[1] !== 0) {
+                    // Y axis inside — depth-aware (depth + or -)
+                    if (p.depth >= 0) setAt(g, rr, cc, innerCh);
+                    else setIfBlank(g, rr, cc, ',');
+                } else {
+                    setAt(g, rr, cc, innerCh);
+                }
+            }
+            // Tip labels
+            function placeTip(s, label, dx, dy) {
+                if (!label) return;
+                var p = project(dir[0] * s, dir[1] * s, dir[2] * s);
+                var rr = Math.round(p.sy) + dy;
+                var cc = Math.round(p.sx) + dx;
+                if (rr >= 0 && rr < ROWS && cc >= 0 && cc + label.length <= COLS) {
+                    drawString(g, rr, cc, label);
+                }
+            }
+            placeTip(EXT, posLabel, posDx, posDy);
+            placeTip(-EXT, negLabel, negDx, negDy);
         }
-        // 6. X axis — horizontal line at center
-        for (var sx = -1.0; sx <= 1.0001; sx += 0.025) {
-            var px = project(sx, 0, 0);
-            setAt(g, Math.round(px.sy), Math.round(px.sx), '-');
-        }
-        // 7. Y axis — depth indicator, short line through center
-        for (var sy = -1.0; sy <= 1.0001; sy += 0.04) {
-            var py = project(0, sy, 0);
-            var rr = Math.round(py.sy), cc = Math.round(py.sx);
-            if (py.depth >= 0) setAt(g, rr, cc, '#');
-            else setIfBlank(g, rr, cc, ',');
-        }
+
+        // Z axis — vertical Bloch axis (extended modestly to fit canvas)
+        drawAxis([0, 0, 1], '|', '+', 1.15, '+Z', 1, 0, '-Z', -3, 0);
+        // X axis — horizontal Bloch axis (extended generously)
+        drawAxis([1, 0, 0], '-', '=', 1.30, '+X', 2, 0, '-X', -3, 0);
+        // Y axis — depth axis (extended further since its on-screen length is short)
+        drawAxis([0, 1, 0], '#', 'o', 1.55, '+Y⊙', 2, 0, '-Y⊗', -5, 0);
 
         // 8. Center pivot
         setAt(g, SR, SC, '+');
@@ -229,8 +251,9 @@ title: Home
     }
 
     function inSphereZone(r, c) {
-        return r >= SR - SRY - 2 && r <= SR + SRY + 3 &&
-               c >= SC - SRX - 5 && c <= SC + SRX + 5;
+        // Extended bounds so the protruding axis tips & their labels stay clean.
+        return r >= SR - SRY - 4 && r <= SR + SRY + 5 &&
+               c >= SC - SRX - 12 && c <= SC + SRX + 12;
     }
 
     function addNoise(g) {
